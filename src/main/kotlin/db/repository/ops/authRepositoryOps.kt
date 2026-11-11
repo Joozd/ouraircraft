@@ -1,17 +1,16 @@
-package org.ouraircraft.repository.ops
+@file:Suppress("UNUSED_PARAMETER", "UnusedReceiverParameter")
+
+package org.ouraircraft.db.repository.ops
 
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
-import org.jetbrains.exposed.v1.jdbc.insert
-import org.jetbrains.exposed.v1.jdbc.select
-import org.jetbrains.exposed.v1.jdbc.selectAll
-import org.jetbrains.exposed.v1.jdbc.update
-import org.ouraircraft.db.PasskeyTable
-import org.ouraircraft.model.PasskeyData
-import org.ouraircraft.model.valueclasses.PasskeyCredentialId
-import org.ouraircraft.repository.AuthRepository
-import org.ouraircraft.repository.convertors.toPasskeyData
+import org.jetbrains.exposed.v1.jdbc.*
+import org.ouraircraft.db.repository.AuthRepository
+import org.ouraircraft.db.repository.convertors.toPasskeyData
+import org.ouraircraft.db.tables.PasskeyTable
+import org.ouraircraft.db.tables.UserTable
+import org.ouraircraft.model.auth.PasskeyData
+import org.ouraircraft.model.auth.valueclasses.PasskeyCredentialId
 import kotlin.uuid.Uuid
 
 /**
@@ -35,6 +34,18 @@ fun AuthRepository.getPasskeyCredentialIdsForUserInTransaction(userId: Uuid): Li
         .where { PasskeyTable.userId eq userId }
     return result.map { PasskeyCredentialId(it[PasskeyTable.credentialId]) }
 }
+
+/**
+ * Geeft de credential-ID's voor [screenName], of een lege lijst bij geen matches.
+ */
+context(tx: JdbcTransaction)
+fun AuthRepository.getPasskeyCredentialIdsForScreenNameInTransaction(
+    screenName: String,
+): List<PasskeyCredentialId> =
+    (PasskeyTable innerJoin UserTable)
+        .select(PasskeyTable.credentialId)
+        .where { UserTable.screenName eq screenName }
+        .map { PasskeyCredentialId(it[PasskeyTable.credentialId]) }
 
 /**
  * Get [PasskeyData] for [credentialId]

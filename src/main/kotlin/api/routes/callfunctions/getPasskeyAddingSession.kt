@@ -1,4 +1,4 @@
-package org.ouraircraft.api.routes.sessions
+package org.ouraircraft.api.routes.callfunctions
 
 import io.ktor.server.application.*
 import org.ouraircraft.api.cookies.readPasskeyAddingCookie

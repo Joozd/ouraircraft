@@ -3,6 +3,7 @@ package org.ouraircraft.crypt
 import kotlinx.io.bytestring.ByteString
 import org.ouraircraft.auth.RecoveryToken
 import org.ouraircraft.auth.Token
+import org.ouraircraft.model.services.CryptoService
 import java.nio.file.Path
 import java.util.Locale
 import javax.crypto.KDF
@@ -10,7 +11,7 @@ import javax.crypto.SecretKey
 import javax.crypto.spec.HKDFParameterSpec
 import kotlin.io.path.readBytes
 
-internal class CryptoImpl: Crypto {
+internal class CryptoServiceImpl: CryptoService {
     private val emailHmacKey = deriveKey(EMAIL_HMAC_INFO, "HmacSHA256")
     private val emailEncryptionKey = deriveKey(EMAIL_ENCRYPTION_INFO, "AES")
     private val recoveryTokenHmacKey = deriveKey(RECOVERY_TOKEN_HMAC_INFO, "HmacSHA256")

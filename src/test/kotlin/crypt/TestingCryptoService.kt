@@ -2,9 +2,10 @@ package org.ouraircraft.crypt
 
 import kotlinx.io.bytestring.ByteString
 import org.ouraircraft.auth.Token
+import org.ouraircraft.model.services.CryptoService
 
 /** Predictable test double; deliberately provides no cryptographic protection. */
-internal class TestingCrypto : Crypto {
+internal class TestingCryptoService : CryptoService {
     override fun hashToken(token: Token): HashedToken =
         HashedToken(token.bytes)
 

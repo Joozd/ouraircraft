@@ -1,13 +1,10 @@
-package org.ouraircraft.repository
+package org.ouraircraft.db.repository
 
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.ouraircraft.db.Database
-import org.ouraircraft.model.PasskeyData
-import org.ouraircraft.model.valueclasses.PasskeyCredentialId
-import org.ouraircraft.repository.ops.getPasskeyCredentialIdsForUserInTransaction
-import org.ouraircraft.repository.ops.getPasskeyDataInTransaction
-import org.ouraircraft.repository.ops.updatePasskeyDataInTransaction
-import org.ouraircraft.repository.ops.writePasskeyDataInTransaction
+import org.ouraircraft.db.repository.ops.*
+import org.ouraircraft.model.auth.PasskeyData
+import org.ouraircraft.model.auth.valueclasses.PasskeyCredentialId
 import kotlin.uuid.Uuid
 
 /**
@@ -26,6 +23,15 @@ class AuthRepository(private val database: Database) {
     fun getPasskeyCredentialIdsForUser(userId: Uuid): List<PasskeyCredentialId> =
         transaction(database.exposed) {
             getPasskeyCredentialIdsForUserInTransaction(userId)
+        }
+
+    /**
+     * Get all Passkey data for user with screen name [screenName]
+     * If no passkey data is present, this list is empty.
+     */
+    fun getPasskeyCredentialIdsForUser(screenName: String): List<PasskeyCredentialId> =
+        transaction(database.exposed) {
+            getPasskeyCredentialIdsForScreenNameInTransaction(screenName)
         }
 
     fun getPasskeyData(

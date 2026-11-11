@@ -1,4 +1,5 @@
 package org.ouraircraft.api.cookies
 
-object CookieExtensions {
+internal object CookieExtensions {
+    val sameSiteStrict = mapOf("SameSite" to "Strict")
 }

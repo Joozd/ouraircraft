@@ -1,4 +1,5 @@
-package org.ouraircraft.utils
+package org.ouraircraft.utils.config
 
-class Config {
+abstract class Config {
+    abstract operator fun <T> get(configValue: ConfigItem<T>): T
 }

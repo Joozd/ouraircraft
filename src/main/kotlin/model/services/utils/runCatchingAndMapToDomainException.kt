@@ -1,4 +1,4 @@
-package org.ouraircraft.db.exceptions
+package org.ouraircraft.model.services.utils
 
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import java.util.concurrent.CancellationException

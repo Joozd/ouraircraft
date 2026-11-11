@@ -1,6 +1,9 @@
-package org.ouraircraft.db.exceptions
+package org.ouraircraft.model.services.utils
 
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
+import org.ouraircraft.db.exceptions.AppendOnlyException
+import org.ouraircraft.db.exceptions.DuplicateEntryException
+import org.ouraircraft.db.exceptions.RaiseMessages
 import org.sqlite.SQLiteException
 
 /**

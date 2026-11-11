@@ -1,8 +1,9 @@
 package org.ouraircraft.auth.yubico
 
-import org.ouraircraft.model.valueclasses.PasskeyCredentialId
+import org.ouraircraft.model.auth.valueclasses.PasskeyCredentialId
 import com.yubico.webauthn.data.ByteArray as YubicoBytearray
-import org.ouraircraft.model.valueclasses.PublicKeyCOSE
+import org.ouraircraft.model.auth.valueclasses.PublicKeyCOSE
+import kotlin.uuid.Uuid
 
 
 fun PublicKeyCOSE.toYubicoByteArray(): YubicoBytearray =
@@ -11,3 +12,9 @@ fun PublicKeyCOSE.toYubicoByteArray(): YubicoBytearray =
 
 fun PasskeyCredentialId.toYubicoByteArray(): YubicoBytearray =
     YubicoBytearray(bytes.toByteArray())
+
+fun Uuid.toYubicoByteArray(): YubicoBytearray =
+    YubicoBytearray(this.toByteArray())
+
+fun YubicoBytearray.toUuid(): Uuid =
+    Uuid.fromByteArray(this.bytes)

@@ -1,10 +1,8 @@
-package org.ouraircraft.services
+package org.ouraircraft.model.services
 
-import org.ouraircraft.auth.EmailVerificationToken
-import org.ouraircraft.auth.PasskeyAddingSessionToken
 import org.ouraircraft.auth.RecoveryToken
 import org.ouraircraft.auth.Token
-import org.ouraircraft.model.User
+import org.ouraircraft.model.auth.User
 import org.ouraircraft.model.dto.EmailVerificationData
 import org.ouraircraft.model.dto.NewUserRegistrationData
 import org.ouraircraft.model.dto.ScreenNameAvailable

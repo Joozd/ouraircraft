@@ -1,21 +1,20 @@
-package org.ouraircraft.services.impl
+package org.ouraircraft.db.service
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.ouraircraft.auth.EmailVerificationToken
-import org.ouraircraft.auth.PasskeyAddingSessionToken
 import org.ouraircraft.auth.RecoveryToken
 import org.ouraircraft.auth.exceptions.TokenMismatchException
 import org.ouraircraft.db.exceptions.UserNotFoundByIDException
-import org.ouraircraft.db.exceptions.runCatchingAndMapToDomainException
-import org.ouraircraft.model.PendingUserCreationResult
-import org.ouraircraft.model.User
+import org.ouraircraft.model.services.utils.runCatchingAndMapToDomainException
+import org.ouraircraft.model.auth.PendingUserCreationResult
+import org.ouraircraft.model.auth.User
 import org.ouraircraft.model.dto.EmailVerificationData
 import org.ouraircraft.model.dto.NewUserRegistrationData
 import org.ouraircraft.model.dto.ScreenNameAvailable
-import org.ouraircraft.repository.UserRepository
-import org.ouraircraft.services.UserManagementService
-import org.ouraircraft.services.factories.LinkFactory
+import org.ouraircraft.db.repository.UserRepository
+import org.ouraircraft.model.services.UserManagementService
+import org.ouraircraft.model.services.factories.LinkFactory
 import java.net.URI
 import kotlin.uuid.Uuid
 
@@ -64,7 +63,7 @@ internal class UserManagementServiceImpl(
      *
      * @param verificationData The data used to verify ownership of the email address.
      *
-     * @return A [Result] containing the generated [org.ouraircraft.auth.RecoveryToken] on success,
+     * @return A [Result] containing the generated [RecoveryToken] on success,
      * or a failure if verification or account creation fails.
      *
      * @throws TokenMismatchException if the token in [verificationData] does not match the stored token hash for the user with the expected Uuid.

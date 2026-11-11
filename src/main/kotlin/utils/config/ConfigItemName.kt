@@ -1,4 +1,5 @@
 package org.ouraircraft.utils.config
 
-class ConfigItemName {
+enum class ConfigItemName{
+    DATABASE_LOCATION
 }

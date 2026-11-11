@@ -1,4 +1,4 @@
-package org.ouraircraft.repository
+package org.ouraircraft.db.repository
 
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.ouraircraft.auth.EmailVerificationToken
@@ -6,19 +6,20 @@ import org.ouraircraft.auth.RecoveryToken
 import org.ouraircraft.auth.exceptions.TokenMismatchException
 import org.ouraircraft.model.services.CryptoService
 import org.ouraircraft.db.Database
-import org.ouraircraft.model.PendingUserRegistration
-import org.ouraircraft.model.User
+import org.ouraircraft.db.exceptions.UserNotFoundByIDException
+import org.ouraircraft.model.auth.PendingUserRegistration
+import org.ouraircraft.model.auth.User
 import org.ouraircraft.model.policy.pendingRegistrationTimeout
-import org.ouraircraft.repository.ops.checkNameAndEmailAvailableInUserAndPending
-import org.ouraircraft.repository.ops.createPendingUserRegistrationInTransaction
-import org.ouraircraft.repository.ops.createUserFromPendingRegistration
-import org.ouraircraft.repository.ops.deletePendingUserRegistration
-import org.ouraircraft.repository.ops.findUserByEmailInTransaction
-import org.ouraircraft.repository.ops.findUserByScreenNameInTransaction
-import org.ouraircraft.repository.ops.getPendingUserFromTableByUuid
-import org.ouraircraft.repository.ops.getUserByIdInTransaction
-import org.ouraircraft.repository.ops.insertRecoveryToken
-import org.ouraircraft.repository.ops.isScreenNameAvailableInTransaction
+import org.ouraircraft.db.repository.ops.checkNameAndEmailAvailableInUserAndPending
+import org.ouraircraft.db.repository.ops.createPendingUserRegistrationInTransaction
+import org.ouraircraft.db.repository.ops.createUserFromPendingRegistration
+import org.ouraircraft.db.repository.ops.deletePendingUserRegistration
+import org.ouraircraft.db.repository.ops.findUserByEmailInTransaction
+import org.ouraircraft.db.repository.ops.findUserByScreenNameInTransaction
+import org.ouraircraft.db.repository.ops.getPendingUserFromTableByUuid
+import org.ouraircraft.db.repository.ops.getUserByIdInTransaction
+import org.ouraircraft.db.repository.ops.insertRecoveryToken
+import org.ouraircraft.db.repository.ops.isScreenNameAvailableInTransaction
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
 import kotlin.uuid.Uuid
@@ -134,6 +135,8 @@ internal class UserRepository(
      *
      * @param id Unique identifier of the user.
      * @return The matching user
+     *
+     * @throws UserNotFoundByIDException If no user exists with the given ID.
      */
     fun getUserById(id: Uuid): User =
         transaction(database.exposed) {
@@ -151,8 +154,8 @@ internal class UserRepository(
         }
 
     /**
-     * Create a recovery token for user with id [userId], and store it in [org.ouraircraft.db.AccountRecoveryTokenTable]
-     * @throws org.ouraircraft.db.exceptions.UserNotFoundByIDException If no user exists with the given ID.
+     * Create a recovery token for user with id [userId], and store it in [org.ouraircraft.db.tables.AccountRecoveryTokenTable]
+     * @throws UserNotFoundByIDException If no user exists with the given ID.
      */
     fun createRecoveryToken(userId: Uuid): RecoveryToken = transaction(database.exposed) {
         val user = getUserByIdInTransaction(userId) // make sure user exists

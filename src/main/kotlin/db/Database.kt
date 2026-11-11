@@ -1,11 +1,14 @@
 package org.ouraircraft.db
 
-import java.nio.file.Path
-import java.sql.Connection
 import org.jetbrains.exposed.v1.core.DatabaseConfig
-import org.jetbrains.exposed.v1.jdbc.Database as ExposedDatabase
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.ouraircraft.db.tables.*
+import java.nio.file.Files
+import java.nio.file.NoSuchFileException
+import java.nio.file.Path
+import java.sql.Connection
+import org.jetbrains.exposed.v1.jdbc.Database as ExposedDatabase
 
 /**
  * File-backed SQLite database using the Exposed 1.x JDBC DSL.
@@ -14,47 +17,60 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
  * API documentation: https://www.jetbrains.com/help/exposed/working-with-database.html
  * SQLite configuration: https://www.sqlite.org/pragma.html
  */
-class Database private constructor(val exposed: ExposedDatabase) {
+class Database (val exposed: ExposedDatabase) {
     /** Creates the initial schema and append-only guards; this is not a migration runner. */
     fun createSchema() {
         transaction(exposed) {
             SchemaUtils.create(
                 UserTable,
-                AircraftTable,
-                AircraftTypeTable,
+                PendingRegistrationTable,
                 PasskeyTable,
                 AccountRecoveryTokenTable,
-                TypeRevisionTable,
-                AircraftRevisionTable,
-                PendingTypeRevisionTable,
-                PendingAircraftRevisionTable,
-                ModerationLogTable,
+
+                PasskeyAddingSessionTable,
+                UserSessionTable,
+
+                AircraftTable,
+                AircraftTypeTable,
+                ManufacturerTable,
+
+                AircraftTypeProposalTable,
+                AircraftProposalTable,
+                ManufacturerProposalTable,
             )
 
-            for (tableName in listOf("TYPE_REVISION", "AIRCRAFT_REVISION")) {
-                for (operation in listOf("UPDATE", "DELETE")) {
-                    exec(
-                        """
-                        CREATE TRIGGER IF NOT EXISTS "${tableName}_NO_${operation}"
-                        BEFORE $operation ON "$tableName"
-                        BEGIN
-                            SELECT RAISE(ABORT, 'Accepted revisions are append-only');
-                        END
-                        """.trimIndent(),
-                    )
-                }
-            }
+            // Protect proposal contents and allow review fields to be populated once.
+            AircraftProposalTable.createProposalImmutabilityTriggers(AircraftProposalTable.resultAircraftId)
+            AircraftTypeProposalTable.createProposalImmutabilityTriggers(AircraftTypeProposalTable.resultAircraftTypeId)
+            ManufacturerProposalTable.createProposalImmutabilityTriggers(ManufacturerProposalTable.resultManufacturerId)
+
         }
     }
 
+
     companion object {
-        /** The database file's parent directory must already exist. */
-        fun connect(location: Path): Database {
+        /**
+         * Connects to an existing SQLite database or creates a new one.
+         *
+         * @param location Path to the SQLite database file.
+         * @param createNew If true, creates a new database and initializes its schema.
+         *                  If false, requires an existing database.
+         * @throws FileAlreadyExistsException If createNew is true and the file exists.
+         * @throws NoSuchFileException If createNew is false and the file does not exist.
+         */
+        fun connect(location: Path, createNew: Boolean = false): Database {
+            val path = location.toAbsolutePath().normalize()
+
+            if (createNew) {
+                Files.createFile(path)
+            } else if (Files.notExists(path)) {
+                throw NoSuchFileException(path.toString())
+            }
+
             val exposed = ExposedDatabase.connect(
-                url = "jdbc:sqlite:${location.toAbsolutePath().normalize()}",
+                url = "jdbc:sqlite:$path",
                 driver = "org.sqlite.JDBC",
                 setupConnection = { connection ->
-                    // Configure before Exposed starts a transaction, on every connection.
                     connection.createStatement().use { statement ->
                         statement.execute("PRAGMA foreign_keys = ON")
                         statement.execute("PRAGMA journal_mode = WAL")
@@ -64,7 +80,11 @@ class Database private constructor(val exposed: ExposedDatabase) {
                     defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
                 },
             )
-            return Database(exposed)
+
+            return Database(exposed).also {
+                if (createNew) it.createSchema()
+            }
         }
     }
+
 }

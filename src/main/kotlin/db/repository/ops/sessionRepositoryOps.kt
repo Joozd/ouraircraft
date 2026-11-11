@@ -1,4 +1,6 @@
-package org.ouraircraft.repository.ops
+@file:Suppress("UNUSED_PARAMETER") // context receiver params are there to force this happening inside a transaction
+
+package org.ouraircraft.db.repository.ops
 
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
@@ -6,6 +8,7 @@ import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
 import org.ouraircraft.auth.PasskeyAddingSessionToken
@@ -14,16 +17,17 @@ import org.ouraircraft.auth.Token
 import org.ouraircraft.auth.UserSessionToken
 import org.ouraircraft.auth.exceptions.TokenNotFoundException
 import org.ouraircraft.crypt.HashedToken
-import org.ouraircraft.db.AccountRecoveryTokenTable
-import org.ouraircraft.db.PasskeyAddingSessionTable
-import org.ouraircraft.db.UserSessionTable
+import org.ouraircraft.db.tables.AccountRecoveryTokenTable
+import org.ouraircraft.db.tables.PasskeyAddingSessionTable
+import org.ouraircraft.db.tables.UserSessionTable
 import org.ouraircraft.db.exceptions.SessionNotFoundByIdException
 import org.ouraircraft.model.dto.sessions.PasskeyAddingSessionData
 import org.ouraircraft.model.dto.sessions.UserSessionData
-import org.ouraircraft.repository.SessionRepository
-import org.ouraircraft.repository.convertors.toPasskeyAddingSessionData
-import org.ouraircraft.repository.convertors.toUserSessionData
+import org.ouraircraft.db.repository.SessionRepository
+import org.ouraircraft.db.repository.convertors.toPasskeyAddingSessionData
+import org.ouraircraft.db.repository.convertors.toUserSessionData
 import kotlin.time.Clock
+import kotlin.time.Duration
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
@@ -46,23 +50,30 @@ internal fun SessionRepository.invalidateRecoveryToken(recoveryToken: RecoveryTo
 
 /**
  * creates a PasskeyAddingSession
- * @param passkeySessionData The [PasskeyAddingSessionData] that describes this Session
+ * @param userId the User UUID for this session
  * @param token The [PasskeyAddingSessionToken] that locks this session
+ * @param ttl The duration this session is valid
+ * @param now A timestamp "now", which is stored for reference, and to determine when TTL expires.
  *
  * This does not check if [PasskeyAddingSessionData.userId] is an existing user; sessions for non-existent users do nothing.
  */
 context(tx: JdbcTransaction)
 internal fun SessionRepository.insertPasskeyAddingSession(
-    passkeySessionData: PasskeyAddingSessionData,
+    userId: Uuid,
     token: PasskeyAddingSessionToken,
-){
+    ttl: Duration,
+    now: Instant = Clock.System.now() // can be injected for testing
+): PasskeyAddingSessionData{
     val hashedToken = hashToken(token)
-    PasskeyAddingSessionTable.insert { row ->
-        row[PasskeyAddingSessionTable.userId] = passkeySessionData.userId
+    val expiresAt = now + ttl
+    val sessionId = PasskeyAddingSessionTable.insertAndGetId { row ->
+        row[PasskeyAddingSessionTable.userId] = userId
         row[PasskeyAddingSessionTable.tokenHash] = hashedToken.bytes.toByteArray()
-        row[PasskeyAddingSessionTable.createdAt] = passkeySessionData.createdAt
-        row[PasskeyAddingSessionTable.expiresAt] = passkeySessionData.expiresAt
-    }
+        row[PasskeyAddingSessionTable.createdAt] = now
+        row[PasskeyAddingSessionTable.expiresAt] = expiresAt
+    }.value
+
+    return PasskeyAddingSessionData(sessionId, userId, now, expiresAt)
 }
 
 /**
@@ -162,6 +173,7 @@ internal fun SessionRepository.getUserSessionDataFromToken(
 
 /**
  * Extends the expiration of the UserSession with id [sessionId] to [newExpiresAt]
+ * @throws SessionNotFoundByIdException if no session with id [sessionId] was found
  */
 context(tx: JdbcTransaction)
 internal fun extendUserSessionInTransaction(sessionId: Long, newExpiresAt: Instant){
@@ -169,6 +181,29 @@ internal fun extendUserSessionInTransaction(sessionId: Long, newExpiresAt: Insta
         it[expiresAt] = newExpiresAt
     }.also{ if (it == 0) throw SessionNotFoundByIdException(sessionId) }
 }
+
+/**
+ * Invalidates the session with id [sessionId]
+ * @throws SessionNotFoundByIdException if no session with id [sessionId] was found
+ */
+context(tx: JdbcTransaction)
+internal fun invalidateUserSessionInTransaction(sessionId: Long){
+    UserSessionTable.deleteWhere { UserSessionTable.id eq sessionId }
+        .also{ if (it == 0) throw SessionNotFoundByIdException(sessionId) }
+}
+
+
+/**
+ * Invalidates the session with id [sessionId]
+ * @throws SessionNotFoundByIdException if no session with id [sessionId] was found
+ */
+context(tx: JdbcTransaction)
+internal fun invalidatePasskeyAddingSessionInTransaction(sessionId: Long){
+    PasskeyAddingSessionTable.deleteWhere { PasskeyAddingSessionTable.id eq sessionId }
+        .also{ if (it == 0) throw SessionNotFoundByIdException(sessionId) }
+}
+
+
 
 
 

@@ -1,4 +1,4 @@
-package org.ouraircraft.services
+package org.ouraircraft.model.services
 
 import kotlinx.io.bytestring.ByteString
 import org.ouraircraft.auth.Token

@@ -1,4 +1,12 @@
 package org.ouraircraft.model.dto
 
-class DtoUser {
-}
+import kotlinx.serialization.Serializable
+import kotlin.time.Instant
+import kotlin.uuid.Uuid
+
+@Serializable
+data class DtoUser(
+    val id: Uuid,
+    val screenName: String,
+    val createdAt: Instant
+)

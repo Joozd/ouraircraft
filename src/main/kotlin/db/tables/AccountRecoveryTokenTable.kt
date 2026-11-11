@@ -1,4 +1,4 @@
-package org.ouraircraft.db
+package org.ouraircraft.db.tables
 
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.datetime.timestamp

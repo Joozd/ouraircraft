@@ -1,7 +1,7 @@
-package org.ouraircraft.repository.convertors
+package org.ouraircraft.db.repository.convertors
 
 import org.jetbrains.exposed.v1.core.ResultRow
-import org.ouraircraft.db.UserSessionTable
+import org.ouraircraft.db.tables.UserSessionTable
 import org.ouraircraft.model.dto.sessions.UserSessionData
 
 /**

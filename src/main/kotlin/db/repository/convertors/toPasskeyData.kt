@@ -1,11 +1,11 @@
-package org.ouraircraft.repository.convertors
+package org.ouraircraft.db.repository.convertors
 
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.core.ResultRow
-import org.ouraircraft.db.PasskeyTable
-import org.ouraircraft.model.PasskeyData
-import org.ouraircraft.model.valueclasses.PasskeyCredentialId
-import org.ouraircraft.model.valueclasses.PublicKeyCOSE
+import org.ouraircraft.db.tables.PasskeyTable
+import org.ouraircraft.model.auth.PasskeyData
+import org.ouraircraft.model.auth.valueclasses.PasskeyCredentialId
+import org.ouraircraft.model.auth.valueclasses.PublicKeyCOSE
 
 /**
  * Creates passkey data from a [ResultRow] containing [PasskeyTable] columns.

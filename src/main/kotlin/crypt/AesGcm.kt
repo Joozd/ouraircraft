@@ -1,5 +1,6 @@
 package org.ouraircraft.crypt
 
+import kotlinx.io.bytestring.ByteString
 import java.security.SecureRandom
 import javax.crypto.Cipher
 import javax.crypto.SecretKey
@@ -25,7 +26,7 @@ class AesGcm(private val key: SecretKey) {
     }
 
     /** Encrypts data, prepending the randomly generated nonce. */
-    fun encrypt(plaintext: ByteArray): ByteArray {
+    fun encrypt(plaintext: ByteArray): EncryptedAesGcm {
         val nonce = ByteArray(12).also(random::nextBytes)
 
         val cipher = Cipher.getInstance("AES/GCM/NoPadding")
@@ -35,7 +36,16 @@ class AesGcm(private val key: SecretKey) {
             GCMParameterSpec(128, nonce)
         )
 
-        return nonce + cipher.doFinal(plaintext)
+        val bytes = ByteString(
+            nonce + cipher.doFinal(plaintext)
+        )
+
+        return EncryptedAesGcm(bytes)
+    }
+
+    fun encryptText(plaintext: String): EncryptedAesGcmText {
+        val encrypted = encrypt(plaintext.toByteArray(Charsets.UTF_8))
+        return EncryptedAesGcmText(encrypted.bytes)
     }
 
     /**
@@ -43,13 +53,14 @@ class AesGcm(private val key: SecretKey) {
      *
      * Throws AEADBadTagException if authentication fails.
      */
-    fun decrypt(encrypted: ByteArray): ByteArray {
-        require(encrypted.size >= 28) {
+    fun decrypt(encrypted: EncryptedAesGcm): ByteString {
+        val encryptedBytes = encrypted.bytes.toByteArray()
+        require(encryptedBytes.size >= 28) {
             "Invalid encrypted data"
         }
 
-        val nonce = encrypted.copyOfRange(0, 12)
-        val ciphertext = encrypted.copyOfRange(12, encrypted.size)
+        val nonce = encryptedBytes.copyOfRange(0, 12)
+        val ciphertext = encryptedBytes.copyOfRange(12, encryptedBytes.size)
 
         val cipher = Cipher.getInstance("AES/GCM/NoPadding")
         cipher.init(
@@ -58,6 +69,11 @@ class AesGcm(private val key: SecretKey) {
             GCMParameterSpec(128, nonce)
         )
 
-        return cipher.doFinal(ciphertext)
+        return ByteString(cipher.doFinal(ciphertext))
+    }
+
+    fun decryptText(encrypted: EncryptedAesGcmText): String {
+        val decryptedBytes = decrypt(EncryptedAesGcm(encrypted.bytes))
+        return decryptedBytes.toByteArray().toString(Charsets.UTF_8)
     }
 }

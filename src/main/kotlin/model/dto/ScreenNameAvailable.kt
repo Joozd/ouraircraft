@@ -1,4 +1,6 @@
 package org.ouraircraft.model.dto
 
-class ScreenNameAvailable {
-}
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class ScreenNameAvailable(val screenName: String, val isAvailable: Boolean)

@@ -1,12 +1,13 @@
 package org.ouraircraft.db
 
-import java.sql.Connection
-import java.sql.DriverManager
 import org.jetbrains.exposed.v1.core.DatabaseConfig
-import org.jetbrains.exposed.v1.jdbc.Database as ExposedDatabase
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.ouraircraft.db.tables.*
+import java.sql.Connection
+import java.sql.DriverManager
 import kotlin.uuid.Uuid
+import org.jetbrains.exposed.v1.jdbc.Database as ExposedDatabase
 
 /** Owns an isolated SQLite database which survives across repository transactions. */
 internal class TestingDatabase : AutoCloseable {
@@ -29,7 +30,23 @@ internal class TestingDatabase : AutoCloseable {
                 ),
             )
             transaction(database.exposed) {
-                SchemaUtils.create(UserTable)
+                SchemaUtils.create(
+                    UserTable,
+                    PendingRegistrationTable,
+                    PasskeyTable,
+                    AccountRecoveryTokenTable,
+
+                    PasskeyAddingSessionTable,
+                    UserSessionTable,
+
+                    AircraftTable,
+                    AircraftTypeTable,
+                    ManufacturerTable,
+
+                    AircraftTypeProposalTable,
+                    AircraftProposalTable,
+                    ManufacturerProposalTable,
+                )
             }
         } catch (failure: Throwable) {
             keeper.close()

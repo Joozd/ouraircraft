@@ -8,16 +8,13 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.ouraircraft.crypt.TestingCryptoService
 import org.ouraircraft.db.TestingDatabase
 import org.ouraircraft.db.UserRole
-import org.ouraircraft.db.UserTable
+import org.ouraircraft.db.tables.UserTable
 import org.ouraircraft.db.service.PasskeyServiceImpl
 import org.ouraircraft.db.service.UserManagementServiceImpl
-import org.ouraircraft.model.User.Role
-import org.ouraircraft.model.dto.NewUserRegistrationData
 import org.ouraircraft.model.services.PasskeyService
 import org.ouraircraft.model.services.factories.LinkFactory
-import org.ouraircraft.repository.AuthRepository
-import org.ouraircraft.repository.UserRepository
-import org.ouraircraft.repository.createUserInTransaction
+import org.ouraircraft.db.repository.AuthRepository
+import org.ouraircraft.db.repository.UserRepository
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -25,7 +22,7 @@ import kotlin.time.Clock
 import kotlin.uuid.Uuid
 
 
-class YubicoAuthServiceImplTest {
+class YubicoPasskeyCeremoniesImplTest {
     private val crypto = TestingCryptoService()
     private val linkFactory = LinkFactory()
 
@@ -45,7 +42,7 @@ class YubicoAuthServiceImplTest {
     private lateinit var rp: RelyingParty
 
 
-    private lateinit var authService: YubicoAuthServiceImpl
+    private lateinit var authService: YubicoPasskeyCeremoniesImpl
     private lateinit var userManSvc: UserManagementServiceImpl
 
 
@@ -74,7 +71,7 @@ class YubicoAuthServiceImplTest {
         fixture = TestingDatabase()
         authrepository = AuthRepository(fixture.database)
         userRepository = UserRepository(fixture.database, crypto)
-        passkeyService = PasskeyServiceImpl(authrepository)
+        passkeyService = PasskeyServiceImpl(authrepository, userRepository)
         rp = RelyingParty.builder()
             .identity(rpIdentity)
             .credentialRepository(CredentialRepositoryImpl(passkeyService))
@@ -82,7 +79,7 @@ class YubicoAuthServiceImplTest {
 
         userManSvc = UserManagementServiceImpl(userRepository, linkFactory)
 
-        authService = YubicoAuthServiceImpl(rp, userManSvc)
+        authService = YubicoPasskeyCeremoniesImpl(rp, userManSvc, passkeyService)
     }
 
     @AfterTest
@@ -96,7 +93,8 @@ class YubicoAuthServiceImplTest {
             val testUserId = Uuid.generateV7()
             val testUserName = "Test McUser"
             insertUser(testUserId, testUserName)
-            val testResult = authService.makePasskeyRegistrationOptions(testUserId)
+            val testResult = authService.makePasskeyCreationOptionsJsonString(testUserId)
+            println("testResult: $testResult")
 
             println("klaar weer")
         }

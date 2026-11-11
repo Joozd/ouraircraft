@@ -1,3 +1,9 @@
 package org.ouraircraft.model.dto
 
-data class PasskeyCreationResponse()
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class PasskeyRegistrationResponse(
+    val label: String,
+    val passkeyRegistrationResponseJson: String
+)

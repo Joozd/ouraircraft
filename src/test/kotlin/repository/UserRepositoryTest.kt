@@ -2,37 +2,40 @@ package org.ouraircraft.repository
 
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
-import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.ouraircraft.crypt.TestingCrypto
+import org.ouraircraft.auth.EmailVerificationToken
+import org.ouraircraft.crypt.TestingCryptoService
+import org.ouraircraft.db.tables.PendingRegistrationTable
 import org.ouraircraft.db.TestingDatabase
 import org.ouraircraft.db.UserRole
-import org.ouraircraft.db.UserTable
-import org.ouraircraft.model.User
-import kotlin.test.AfterTest
-import kotlin.test.BeforeTest
-import kotlin.test.Test
-import kotlin.test.assertContentEquals
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertNotEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
+import org.ouraircraft.db.tables.UserTable
+import org.ouraircraft.db.exceptions.*
+import org.ouraircraft.db.repository.UserRepository
+import org.ouraircraft.model.auth.PendingUserRegistration
+import org.ouraircraft.model.auth.User
+import org.ouraircraft.db.repository.ops.createUserInTransaction
+import org.sqlite.SQLiteException
+import kotlin.io.encoding.Base64
+import kotlin.test.*
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.hours
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
 internal class UserRepositoryTest {
     private lateinit var fixture: TestingDatabase
     private lateinit var repository: UserRepository
-    private val crypto = TestingCrypto()
+    private val crypto = TestingCryptoService()
+    private var tokenSequence = 0
+    private val verificationTokens = mutableMapOf<Uuid, EmailVerificationToken>()
 
     @BeforeTest
     fun setUp() {
         fixture = TestingDatabase()
         repository = UserRepository(fixture.database, crypto)
+        tokenSequence = 0
+        verificationTokens.clear()
     }
 
     @AfterTest
@@ -41,164 +44,267 @@ internal class UserRepositoryTest {
     }
 
     @Test
-    fun `createUser persists new screen name email default role enabled state and current timestamp`() {
+    fun `direct creation persists supplied fields and defaults to enabled`() {
         val email = "Alice@example.org"
-        val screenName = "Pilot Å"
-        val before = Clock.System.now()
-        val id = repository.createUser(email, screenName)
-        val after = Clock.System.now()
-
+        val expected = addUser(email, "Pilot Å", UserRole.SUPERUSER)
+        assertUserLookups(expected, email)
         transaction(fixture.database.exposed) {
-            val row = UserTable.selectAll().where { UserTable.id eq id }.single()
-            assertEquals(1L, UserTable.selectAll().count())
-            assertEquals(screenName, row[UserTable.screenName])
+            val row = UserTable.selectAll().where { UserTable.id eq expected.id }.single()
             assertContentEquals(crypto.hashEmail(email).bytes.toByteArray(), row[UserTable.emailLookup])
             assertContentEquals(email.encodeToByteArray(), row[UserTable.emailEncrypted])
-            assertEquals(UserRole.USER, row[UserTable.role])
+            assertEquals(UserRole.SUPERUSER, row[UserTable.role])
             assertEquals(false, row[UserTable.disabled])
-            assertTrue(row[UserTable.createdAt] in before..after)
         }
-        assertEquals('7', id.toString()[14], "New users should have UUIDv7 IDs")
-        assertEquals(id, assertNotNull(repository.getUserById(id)).id)
-        assertEquals(id, assertNotNull(repository.findUserByEmail(email)).id)
-        assertEquals(screenName, assertNotNull(repository.getUserById(id)).screenName)
-        assertEquals(screenName, assertNotNull(repository.findUserByEmail(email)).screenName)
+        assertCounts(1, 0)
     }
 
     @Test
-    fun `createUser persists each explicitly supplied role`() {
-        val roles = listOf(
-            User.Role.USER to UserRole.USER,
-            User.Role.SUPERUSER to UserRole.SUPERUSER,
-            User.Role.ROOT to UserRole.ROOT,
-        )
-        for ((index, rolesForUser) in roles.withIndex()) {
-            val (modelRole, databaseRole) = rolesForUser
-            val id = repository.createUser("role$index@example.org", "Pilot $index", modelRole)
+    fun `direct creation stores every supplied role`() {
+        for ((index, role) in UserRole.entries.withIndex()) {
+            val email = "role$index@example.org"
+            val expected = addUser(email, role = role)
+            assertUserLookups(expected, email)
             transaction(fixture.database.exposed) {
-                val row = UserTable.selectAll().where { UserTable.id eq id }.single()
-                assertEquals(databaseRole, row[UserTable.role])
+                assertEquals(role, UserTable.selectAll().where { UserTable.id eq expected.id }.single()[UserTable.role])
             }
-            assertEquals(modelRole, assertNotNull(repository.getUserById(id)).role)
         }
     }
 
     @Test
-    fun `createUser assigns different IDs to different users`() {
-        val first = repository.createUser("first@example.org", "First pilot")
-        val second = repository.createUser("second@example.org", "Second pilot")
-
-        assertNotEquals(first, second)
-        assertEquals(first, assertNotNull(repository.findUserByEmail("first@example.org")).id)
-        assertEquals(second, assertNotNull(repository.findUserByEmail("second@example.org")).id)
-    }
-
-    @Test
-    fun `createUser rejects duplicate email without replacing existing user`() {
-        val existing = seedUser("alice@example.org")
-
-        assertFailsWith<ExposedSQLException> {
-            repository.createUser("alice@example.org", "New pilot", User.Role.ROOT)
-        }
-
-        assertEquals(existing, repository.findUserByEmail("alice@example.org"))
+    fun `lookup methods return disabled users`() {
+        val expected = addUser("disabled@example.org", disabled = true)
+        assertUserLookups(expected, "disabled@example.org")
         transaction(fixture.database.exposed) {
-            assertEquals(1L, UserTable.selectAll().count())
+            assertEquals(true, UserTable.selectAll().where { UserTable.id eq expected.id }.single()[UserTable.disabled])
         }
     }
 
     @Test
-    fun `createUser rejects duplicate screen name without replacing existing user`() {
+    fun `pending creation persists registration fields and expiration`() {
+        val email = "Alice@example.org"
+        val token = nextToken()
+        val before = Clock.System.now()
+        val id = repository.createPendingUserRegistration("Pilot Å", email, token)
+        val after = Clock.System.now()
+        val pending = repository.getPendingUserRegistrationByUuid(id)
+
+        assertEquals("Pilot Å", pending.screenName)
+        assertEquals(crypto.hashEmail(email), pending.emailLookup)
+        assertEquals(crypto.encryptEmail(email), pending.emailEncrypted)
+        assertEquals(crypto.hashToken(token), pending.verificationTokenHash)
+        assertTrue(pending.createdAt.toEpochMilliseconds() in before.toEpochMilliseconds()..after.toEpochMilliseconds())
+        assertTrue(pending.expiresAt.toEpochMilliseconds() in (before + 24.hours).toEpochMilliseconds()..(after + 24.hours).toEpochMilliseconds())
+        assertEquals('7', pending.id.toString()[14])
+        assertFailsWith<UserNotFoundByIDException> { repository.getUserById(pending.id) }
+        assertCounts(0, 1)
+    }
+
+    @Test
+    fun `promotion moves pending registration preserving its fields`() {
         val email = "alice@example.org"
-        val screenName = "Pilot Å"
-        val existingId = repository.createUser(email, screenName)
-        val existing = assertNotNull(repository.getUserById(existingId))
-
-        // A different email isolates the screen-name uniqueness constraint.
-        assertFailsWith<ExposedSQLException> {
-            repository.createUser("other@example.org", screenName, User.Role.ROOT)
-        }
-
-        assertEquals(existing, repository.getUserById(existingId))
-        assertEquals(existing, repository.findUserByEmail(email))
-        assertNull(repository.findUserByEmail("other@example.org"))
+        val pending = addPending("Pilot Å", email)
+        assertEquals(pending.id, repository.elevatePendingToUser(pending.id, verificationTokens.getValue(pending.id)))
+        assertUserLookups(
+            User(pending.id, pending.screenName, pending.emailEncrypted, pending.createdAt, emptySet()), email,
+        )
         transaction(fixture.database.exposed) {
-            assertEquals(1L, UserTable.selectAll().count())
+            val row = UserTable.selectAll().where { UserTable.id eq pending.id }.single()
+            assertContentEquals(pending.emailLookup.bytes.toByteArray(), row[UserTable.emailLookup])
+            assertEquals(false, row[UserTable.disabled])
+        }
+        assertFailsWith<PendingUserNotFoundException> { repository.getPendingUserRegistrationByUuid(pending.id) }
+        assertCounts(1, 0)
+    }
+
+    @Test
+    fun `promotion leaves other pending registrations unchanged`() {
+        val first = addPending("First pilot", "first@example.org")
+        val second = addPending("Second pilot", "second@example.org")
+        repository.elevatePendingToUser(first.id, verificationTokens.getValue(first.id))
+        assertEquals(second, repository.getPendingUserRegistrationByUuid(second.id))
+        assertFailsWith<UserNotFoundByIDException> { repository.getUserById(second.id) }
+        assertCounts(1, 1)
+    }
+
+    @Test
+    fun `registration rejects duplicate screen name in users`() =
+        assertRegistrationConflict(inUsers = true, duplicateName = true)
+
+    @Test
+    fun `registration rejects duplicate screen name in pending`() =
+        assertRegistrationConflict(inUsers = false, duplicateName = true)
+
+    @Test
+    fun `registration rejects case variant of name in users`() =
+        assertRegistrationConflict(inUsers = true, duplicateName = true, normalizedVariant = true)
+
+    @Test
+    fun `registration rejects case variant of name in pending`() =
+        assertRegistrationConflict(inUsers = false, duplicateName = true, normalizedVariant = true)
+
+    @Test
+    fun `registration rejects duplicate email in users`() =
+        assertRegistrationConflict(inUsers = true, duplicateName = false)
+
+    @Test
+    fun `registration rejects duplicate email in pending`() =
+        assertRegistrationConflict(inUsers = false, duplicateName = false)
+
+    @Test
+    fun `registration rejects normalized duplicate email in users`() =
+        assertRegistrationConflict(inUsers = true, duplicateName = false, normalizedVariant = true)
+
+    @Test
+    fun `registration rejects normalized duplicate email in pending`() =
+        assertRegistrationConflict(inUsers = false, duplicateName = false, normalizedVariant = true)
+
+    @Test
+    fun `promotion fails with database uniqueness violation when name was taken meanwhile`() =
+        assertPromotionConflict("Pilot", "other@example.org")
+
+    @Test
+    fun `promotion fails with database uniqueness violation for case variant of taken name`() =
+        assertPromotionConflict("pILOT", "other@example.org")
+
+    @Test
+    fun `promotion fails with database uniqueness violation when email was taken meanwhile`() =
+        assertPromotionConflict("Other pilot", "alice@example.org")
+
+    @Test
+    fun `promotion cannot be repeated after successful move`() {
+        val pending = addPending("Pilot", "alice@example.org")
+        repository.elevatePendingToUser(pending.id, verificationTokens.getValue(pending.id))
+        val existing = repository.getUserById(pending.id)
+        assertFailsWith<PendingUserNotFoundException> { repository.elevatePendingToUser(pending.id, verificationTokens.getValue(pending.id)) }
+        assertEquals(existing, repository.getUserById(pending.id))
+        assertCounts(1, 0)
+    }
+
+    @Test
+    fun `missing pending lookup and promotion throw specific exceptions`() {
+        val missingId = Uuid.random()
+        assertFailsWith<PendingUserNotFoundException> { repository.getPendingUserRegistrationByUuid(missingId) }
+        assertFailsWith<PendingUserNotFoundException> { repository.elevatePendingToUser(missingId, nextToken()) }
+        assertCounts(0, 0)
+    }
+
+    @Test
+    fun `missing user lookups throw specific exceptions in empty and populated databases`() {
+        val missingId = Uuid.random()
+        repeat(2) { iteration ->
+            if (iteration == 1) addUser("alice@example.org")
+            assertFailsWith<UserNotFoundByEmailException> { repository.findUserByEmail("missing@example.org") }
+            assertFailsWith<UserNotFoundByIDException> { repository.getUserById(missingId) }
+            assertFailsWith<UserNotFoundByScreenNameException> { repository.findUserByScreenName("Missing pilot") }
         }
     }
 
     @Test
-    fun `findUserByEmail returns null when no email matches`() {
-        assertNull(repository.findUserByEmail("missing@example.org"))
-        seedUser("alice@example.org")
-        assertNull(repository.findUserByEmail("missing@example.org"))
+    fun `lookups select matching user among multiple users`() {
+        addUser("other@example.org")
+        val expected = addUser("alice@example.org", role = UserRole.SUPERUSER)
+        assertUserLookups(expected, "alice@example.org")
     }
 
     @Test
-    fun `getUserById returns null when no ID matches`() {
-        val missingId = Uuid.parse("00000000-0000-7000-8000-000000000001")
-        assertNull(repository.getUserById(missingId))
-        seedUser("alice@example.org")
-        assertNull(repository.getUserById(missingId))
-    }
-
-    @Test
-    fun `findUserByEmail returns all fields of the matching user`() {
-        seedUser("other@example.org")
-        val expected = seedUser("alice@example.org", UserRole.SUPERUSER)
-
-        assertEquals(expected, repository.findUserByEmail("alice@example.org"))
-    }
-
-    @Test
-    fun `findUserByEmail uses the lookup value supplied by crypto`() {
-        val expected = seedUser("alice@example.org")
-
+    fun `email and screen name lookups use normalized comparisons`() {
+        val expected = addUser("alice@example.org", "Pilot")
         assertEquals(expected, repository.findUserByEmail("  ALICE@EXAMPLE.ORG  "))
+        assertEquals(expected, repository.findUserByScreenName("pILOT"))
     }
 
-    @Test
-    fun `getUserById returns all fields of the matching user for each role`() {
-        val roles = listOf(UserRole.USER, UserRole.SUPERUSER, UserRole.ROOT)
-        for ((index, role) in roles.withIndex()) {
-            val expected = seedUser("role$index@example.org", role)
-            assertEquals(expected, repository.getUserById(expected.id))
+    private fun assertRegistrationConflict(
+        inUsers: Boolean,
+        duplicateName: Boolean,
+        normalizedVariant: Boolean = false,
+    ) {
+        val user = if (inUsers) addUser("alice@example.org", "Pilot") else null
+        val pending = if (!inUsers) addPending("Pilot", "alice@example.org") else null
+        // Keep the other field distinct to isolate the intended availability check.
+        val name = if (duplicateName) (if (normalizedVariant) "pILOT" else "Pilot") else "Other pilot"
+        val email = if (!duplicateName) {
+            if (normalizedVariant) " ALICE@EXAMPLE.ORG " else "alice@example.org"
+        } else "other@example.org"
+        if (duplicateName) {
+            val failure = assertFailsWith<UserAlreadyExistsException> {
+                repository.createPendingUserRegistration(name, email, nextToken())
+            }
+            assertEquals(name, failure.screenName)
+        } else {
+            val failure = assertFailsWith<EmailAlreadyInUseException> {
+                repository.createPendingUserRegistration(name, email, nextToken())
+            }
+            assertEquals(email, failure.email)
+        }
+        if (user != null) assertUserLookups(user, "alice@example.org")
+        if (pending != null) assertEquals(pending, repository.getPendingUserRegistrationByUuid(pending.id))
+        assertCounts(if (inUsers) 1L else 0L, if (inUsers) 0L else 1L)
+    }
+
+    private fun assertPromotionConflict(takenName: String, takenEmail: String) {
+        val pending = addPending("Pilot", "alice@example.org")
+        // Direct insertion models another caller taking the name/email after registration.
+        val existing = addUser(takenEmail, takenName)
+        val failure = assertFailsWith<ExposedSQLException> {
+            repository.elevatePendingToUser(pending.id, verificationTokens.getValue(pending.id))
+        }
+        val sqliteFailure = assertIs<SQLiteException>(failure.cause)
+        assertEquals(2067, sqliteFailure.resultCode.code, "Expected a SQLite UNIQUE constraint violation")
+        assertEquals(pending, repository.getPendingUserRegistrationByUuid(pending.id))
+        assertUserLookups(existing, takenEmail)
+        assertFailsWith<UserNotFoundByIDException> { repository.getUserById(pending.id) }
+        assertCounts(1, 1)
+    }
+
+    private fun assertUserLookups(expected: User, email: String) {
+        assertEquals(expected, repository.getUserById(expected.id))
+        assertEquals(expected, repository.findUserByEmail(email))
+        assertEquals(expected, repository.findUserByScreenName(expected.screenName))
+    }
+
+    private fun assertCounts(users: Long, pending: Long) {
+        transaction(fixture.database.exposed) {
+            assertEquals(users, UserTable.selectAll().count(), "Registered user count")
+            assertEquals(pending, PendingRegistrationTable.selectAll().count(), "Pending registration count")
         }
     }
 
-    @Test
-    fun `lookup methods return a disabled user`() {
-        val expected = seedUser("disabled@example.org", disabled = true)
-
-        assertEquals(expected, repository.findUserByEmail("disabled@example.org"))
-        assertEquals(expected, repository.getUserById(expected.id))
+    private fun nextToken(): EmailVerificationToken {
+        val marker = (++tokenSequence).toByte()
+        return EmailVerificationToken.fromBase64UrlSafe(
+            Base64.UrlSafe.withPadding(Base64.PaddingOption.ABSENT).encode(ByteArray(32) { marker }),
+        )
     }
 
-    private fun seedUser(
+    private fun addPending(screenName: String, email: String): PendingUserRegistration {
+        val token = nextToken()
+        val id = repository.createPendingUserRegistration(screenName, email, token)
+        verificationTokens[id] = token
+        return repository.getPendingUserRegistrationByUuid(id)
+    }
+
+    private fun addUser(
         email: String,
+        screenName: String = "Pilot Å — $email",
         role: UserRole = UserRole.USER,
         disabled: Boolean = false,
     ): User {
-        val id = Uuid.random()
-        val screenName = "Pilot Å — $email"
+        val id = Uuid.generateV7()
         val encryptedEmail = crypto.encryptEmail(email)
         val createdAt = Instant.parse("2025-01-02T03:04:05Z")
         transaction(fixture.database.exposed) {
-            UserTable.insert { row ->
-                row[UserTable.id] = id
-                row[UserTable.screenName] = screenName
-                row[UserTable.emailLookup] = crypto.hashEmail(email).bytes.toByteArray()
-                row[UserTable.emailEncrypted] = encryptedEmail.bytes.toByteArray()
-                row[UserTable.role] = role
-                row[UserTable.disabled] = disabled
-                row[UserTable.createdAt] = createdAt
+            if (disabled) {
+                repository.createUserInTransaction(
+                    id, screenName, crypto.hashEmail(email), encryptedEmail, role,
+                    disabled = true, createdAt = createdAt,
+                )
+            } else {
+                // Exercise the default disabled argument for enabled users.
+                repository.createUserInTransaction(
+                    id, screenName, crypto.hashEmail(email), encryptedEmail, role, createdAt = createdAt,
+                )
             }
         }
-        val modelRole = when (role) {
-            UserRole.USER -> User.Role.USER
-            UserRole.SUPERUSER -> User.Role.SUPERUSER
-            UserRole.ROOT -> User.Role.ROOT
-        }
-        return User(id, screenName, encryptedEmail, modelRole, createdAt)
+        return User(id, screenName, encryptedEmail, createdAt, emptySet())
     }
 }

@@ -1,4 +1,4 @@
-package org.ouraircraft.util
+package org.ouraircraft.auth.util
 
 import kotlinx.io.bytestring.ByteString
 

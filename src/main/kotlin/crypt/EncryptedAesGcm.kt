@@ -1,16 +1,15 @@
 package org.ouraircraft.crypt
 
-class EncryptedAesCgm(val bytes: ByteArray) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other == null || this::class != other::class) return false
+import kotlinx.io.bytestring.ByteString
+import org.ouraircraft.auth.util.toByteString
 
-        other as EncryptedAesCgm
 
-        return bytes.contentEquals(other.bytes)
-    }
+/** AES-GCM encrypted data, including nonce and authentication tag. */
+@JvmInline
+value class EncryptedAesGcm(val bytes: ByteString)
 
-    override fun hashCode(): Int {
-        return bytes.contentHashCode()
-    }
+/** an EncryptedAesGcm that is expected to contain an encrypted UTF-8 encoded string (not enforced here) */
+@JvmInline
+value class EncryptedAesGcmText(val bytes: ByteString){
+    constructor(bytes: ByteArray) : this(bytes.toByteString())
 }

@@ -1,13 +1,21 @@
-package org.ouraircraft.services.impl
+package org.ouraircraft.api.service
 
 import org.ouraircraft.auth.PasskeyAddingSessionToken
 import org.ouraircraft.auth.RecoveryToken
-import org.ouraircraft.db.exceptions.runCatchingAndMapToDomainException
+import org.ouraircraft.auth.UserSessionToken
+import org.ouraircraft.db.exceptions.SessionNotFoundByIdException
+import org.ouraircraft.model.services.utils.runCatchingAndMapToDomainException
+import org.ouraircraft.model.auth.PasskeyData
 import org.ouraircraft.model.dto.sessions.PasskeyAddingSessionData
-import org.ouraircraft.repository.SessionRepository
-import org.ouraircraft.repository.UserRepository
-import org.ouraircraft.repository.getPasskeyAddingSessionDataFromToken
-import org.ouraircraft.services.SessionService
+import org.ouraircraft.model.dto.sessions.UserSessionData
+import org.ouraircraft.db.repository.SessionRepository
+import org.ouraircraft.model.services.SessionService
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Instant
+
+// TODO this goes to central properties
+private val USER_SESSION_EXTENSION_TTL = 30.days
 
 internal class SessionServiceImpl(
     private val sessionRepository: SessionRepository
@@ -18,7 +26,7 @@ internal class SessionServiceImpl(
      * @param recoveryToken A [RecoveryToken] that points to a user/recoverytoken combination.
      *  if the RecoveryToken matches a user, a new PasskeyAddingSession is created for that user.
      *
-     * @return The [org.ouraircraft.auth.PasskeyAddingSessionToken] that identifies this PasskeyAddingSession,
+     * @return The [PasskeyAddingSessionToken] that identifies this PasskeyAddingSession,
      *  or a failed [Result] containing
      *      [org.ouraircraft.auth.exceptions.TokenNotFoundException] if [recoveryToken] is not found or expired
      */
@@ -42,6 +50,70 @@ internal class SessionServiceImpl(
         token: PasskeyAddingSessionToken
     ): Result<PasskeyAddingSessionData> = runCatchingAndMapToDomainException {
         sessionRepository.getPasskeyAddingSession(token)
+    }
+
+    /**
+     * Invalidates the session on the server side. Cookies etc. must be cleaned up elsewhere.
+     * Returns a Failure with a [SessionNotFoundByIdException] if [sessionData] does not point to an existing session
+     */
+    override suspend fun invalidatePasskeyAddingSession(sessionData: PasskeyAddingSessionData): Result<Unit> = runCatchingAndMapToDomainException{
+        sessionRepository.invalidatePasskeyAddingSession(sessionData.sessionId)
+    }
+
+    /**
+     * Creates a UserSession.
+     *
+     *  if the RecoveryToken matches a user, a new UserSession is created for that user.
+     *
+     * @return The [PasskeyAddingSessionData] paired to the [PasskeyAddingSessionToken] that identifies this UserSession
+     */
+    override suspend fun createUserSession(
+        passkeyData: PasskeyData
+    ): Result<Pair<UserSessionData, UserSessionToken>> =
+        runCatchingAndMapToDomainException {
+            val userId = passkeyData.userId
+            sessionRepository.createUserSession(userId)
+        }
+
+    /**
+     * Get data for this UserSession
+     * @param token: The token that identifies this session
+     *
+     * @return the data that belongs to this session
+     *
+     * @throws org.ouraircraft.auth.exceptions.TokenNotFoundException when the token does not match a session
+     * @throws org.ouraircraft.db.exceptions.UserNotFoundByIDException if the id that own this session does not belong to a user
+     */
+    override suspend fun getUserSession(token: UserSessionToken, extendIfValid: Boolean): Result<UserSessionData> = runCatchingAndMapToDomainException {
+        sessionRepository.getUserSession(token).let{ currentSessionData ->
+            if (extendIfValid) extendUserSession(currentSessionData, Clock.System.now() + USER_SESSION_EXTENSION_TTL).getOrThrow()
+            else currentSessionData
+        }
+    }
+
+    /**
+     * Extend the expiration time of a session due to the session being used.
+     * This guards the domain requirement that [UserSessionData.expiresAt] <= [UserSessionData.maxExtendedExpiresAt]
+     */
+    override suspend fun extendUserSession(
+        userSessionData: UserSessionData,
+        newExpiresAt: Instant
+    ): Result<UserSessionData> = runCatchingAndMapToDomainException{
+        val maximizedExpiresAt = minOf(newExpiresAt, userSessionData.maxExtendedExpiresAt)
+
+        val newUserSessionData = userSessionData.copy(expiresAt = maximizedExpiresAt)
+        // if needed , we can optimize this by only extending if TTL is small enough, so not every page call creates a DB write.
+        sessionRepository.extendUserSession(newUserSessionData)
+
+        return@runCatchingAndMapToDomainException newUserSessionData
+    }
+
+    /**
+     * Invalidates the session on the server side. Cookies etc. must be cleaned up elsewhere.
+     * Returns a Failure with a [SessionNotFoundByIdException] if [sessionData] does not point to an existing session
+     */
+    override suspend fun invalidateUserSession(sessionData: UserSessionData): Result<Unit> = runCatchingAndMapToDomainException{
+        sessionRepository.invalidateUserSession(sessionData.sessionId)
     }
 }
 

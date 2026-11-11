@@ -1,6 +1,6 @@
-@file:Suppress("unused")
+@file:Suppress("unused", "UnusedReceiverParameter")
 
-package org.ouraircraft.repository.ops
+package org.ouraircraft.db.repository.ops
 
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
@@ -11,20 +11,20 @@ import org.ouraircraft.auth.EmailVerificationToken
 import org.ouraircraft.crypt.EncryptedAesGcmText
 import org.ouraircraft.crypt.HashedEmail
 import org.ouraircraft.crypt.HashedToken
-import org.ouraircraft.db.AccountRecoveryTokenTable
-import org.ouraircraft.db.PendingRegistrationTable
+import org.ouraircraft.db.tables.AccountRecoveryTokenTable
+import org.ouraircraft.db.tables.PendingRegistrationTable
 import org.ouraircraft.db.UserRole
-import org.ouraircraft.db.UserTable
-import org.ouraircraft.db.conversion.toModelRole
+import org.ouraircraft.db.tables.UserTable
+import org.ouraircraft.db.conversion.toAuthorizations
 import org.ouraircraft.db.exceptions.EmailAlreadyInUseException
 import org.ouraircraft.db.exceptions.PendingUserNotFoundException
 import org.ouraircraft.db.exceptions.UserAlreadyExistsException
 import org.ouraircraft.db.exceptions.UserNotFoundByEmailException
 import org.ouraircraft.db.exceptions.UserNotFoundByIDException
 import org.ouraircraft.db.exceptions.UserNotFoundByScreenNameException
-import org.ouraircraft.model.PendingUserRegistration
-import org.ouraircraft.model.User
-import org.ouraircraft.repository.UserRepository
+import org.ouraircraft.model.auth.PendingUserRegistration
+import org.ouraircraft.model.auth.User
+import org.ouraircraft.db.repository.UserRepository
 import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
@@ -214,7 +214,7 @@ internal fun UserRepository.findUserByEmailInTransaction(email: String): User {
                 id = row[UserTable.id],
                 screenName = row[UserTable.screenName],
                 encryptedEmail = EncryptedAesGcmText(row[UserTable.emailEncrypted]),
-                role = row[UserTable.role].toModelRole(),
+                authorizations = row[UserTable.role].toAuthorizations(),
                 createdAt = row[UserTable.createdAt]
             )
         } ?: throw UserNotFoundByEmailException(email)
@@ -238,7 +238,7 @@ internal fun UserRepository.findUserByScreenNameInTransaction(screenName: String
                 id = row[UserTable.id],
                 screenName = row[UserTable.screenName],
                 encryptedEmail = EncryptedAesGcmText(row[UserTable.emailEncrypted]),
-                role = row[UserTable.role].toModelRole(),
+                authorizations = row[UserTable.role].toAuthorizations(),
                 createdAt = row[UserTable.createdAt]
             )
         } ?: throw UserNotFoundByScreenNameException(screenName)
@@ -266,7 +266,7 @@ internal fun UserRepository.getUserByIdInTransaction(
             id = row[UserTable.id],
             screenName = row[UserTable.screenName],
             encryptedEmail = EncryptedAesGcmText(row[UserTable.emailEncrypted]),
-            role = row[UserTable.role].toModelRole(),
+            authorizations = row[UserTable.role].toAuthorizations(),
             createdAt = row[UserTable.createdAt]
         )
     } ?: throw UserNotFoundByIDException(id)

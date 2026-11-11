@@ -1,8 +1,7 @@
-package org.ouraircraft.db
+package org.ouraircraft.db.tables
 
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.datetime.timestamp
-import kotlin.time.Instant
 
 /** Stores only the SHA-256 hash; token generation and consumption belong to the application. */
 object UserSessionTable : LongIdTable("USER_SESSION") {

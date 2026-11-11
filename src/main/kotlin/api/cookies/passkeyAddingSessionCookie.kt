@@ -28,3 +28,23 @@ internal fun ApplicationCall.placePasskeyAddingSessionCookie(
         extensions = CookieExtensions.sameSiteStrict
     )
 }
+
+internal fun ApplicationCall.readPasskeyAddingCookie(): PasskeyAddingSessionToken? =
+    request.cookies[CookieNames.PASSKEY_ADDING_SESSION]?.let{ cookieValue ->
+        try{
+            PasskeyAddingSessionToken.fromBase64UrlSafe(cookieValue)
+        }
+        catch (e: IllegalArgumentException){
+            return null
+            //TODO custom error, 400 teruggeven.
+        }
+    }
+
+internal fun ApplicationCall.deletePasskeyAddingCookie(){
+    response.cookies.append(
+        name = CookieNames.PASSKEY_ADDING_SESSION,
+        value = "",
+        maxAge = 0,
+        path = "/",
+    )
+}

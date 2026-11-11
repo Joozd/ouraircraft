@@ -1,7 +1,8 @@
-package org.ouraircraft.db
+package org.ouraircraft.db.tables
 
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.datetime.timestamp
+import org.ouraircraft.db.UserRole
 
 /** UUIDv7 IDs and encrypted/hashed email values must be supplied by the application. */
 object UserTable : Table("USER") {
