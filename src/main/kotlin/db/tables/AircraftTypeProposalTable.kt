@@ -1,7 +1,5 @@
 package org.ouraircraft.db.tables
 
-import org.jetbrains.exposed.v1.datetime.timestamp
-
 /**
  * Stores proposed creations, modifications, and deletions of aircraft types.
  *
@@ -33,5 +31,4 @@ object AircraftTypeProposalTable : CheckableTable("TYPE_PROPOSAL") {
     val wakeCategory = text("wake_category")
     val delete = bool("delete") // proposed deletion
     val proposalComment = text("proposal_comment").nullable()
-    val createdAt = timestamp("created_at")
 }

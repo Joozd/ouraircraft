@@ -1,7 +1,5 @@
 package org.ouraircraft.db.tables
 
-import org.jetbrains.exposed.v1.core.isNull
-import org.jetbrains.exposed.v1.datetime.timestamp
 import org.ouraircraft.db.helpers.asAircraftRegistration
 
 /**
@@ -38,13 +36,4 @@ object AircraftProposalTable : CheckableTable("AIRCRAFT_PROPOSAL") {
     val registration = text("registration").asAircraftRegistration()
     val delete = bool("delete")
     val proposalComment = text("proposal_comment").nullable()
-    val createdAt = timestamp("created_at")
-
-    init {
-        index(
-            customIndexName = "aircraft_proposal_pending_created_at",
-            columns = arrayOf(createdAt),
-            filterCondition = { checkResult.isNull() }
-        )
-    }
 }
