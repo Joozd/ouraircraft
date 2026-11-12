@@ -5,16 +5,12 @@ import org.ouraircraft.auth.UserAuthorization
 import org.ouraircraft.db.Database
 import org.ouraircraft.db.exceptions.AlreadyCheckedException
 import org.ouraircraft.db.exceptions.ProposalNotFoundByIdException
-import org.ouraircraft.db.repository.ops.createAircraftTypeFromProposalInTransaction
-import org.ouraircraft.db.repository.ops.getAllOpenAircraftTypeProposalsInTransaction
-import org.ouraircraft.db.repository.ops.getAircraftTypeProposalByIdInTransaction
-import org.ouraircraft.db.repository.ops.getAircraftTypesByFamilyPrefixInTransaction
-import org.ouraircraft.db.repository.ops.insertAircraftTypeProposalInTransaction
-import org.ouraircraft.db.repository.ops.markAircraftTypeProposalAsCheckedInTransaction
+import org.ouraircraft.db.exceptions.TargetItemForProposalNotFoundByIdException
+import org.ouraircraft.db.repository.ops.*
 import org.ouraircraft.model.auth.User
-import org.ouraircraft.model.data.CheckResult
 import org.ouraircraft.model.data.AircraftType
 import org.ouraircraft.model.data.AircraftTypeProposal
+import org.ouraircraft.model.data.CheckResult
 import org.ouraircraft.model.data.Proposal
 
 class AircraftTypeRepository(val database: Database) {

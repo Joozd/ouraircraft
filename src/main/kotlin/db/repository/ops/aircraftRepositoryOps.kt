@@ -1,4 +1,4 @@
-@file:Suppress("UNUSED_PARAMETER")
+@file:Suppress("UNUSED_PARAMETER", "UnusedReceiverParameter")
 
 package org.ouraircraft.db.repository.ops
 
