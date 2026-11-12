@@ -12,9 +12,9 @@ import kotlin.uuid.Uuid
  * once when the proposal is accepted or rejected.
  *
  * @property id Unique identifier of this proposal.
- * @property targetAircraftId ID of the aircraft being modified or deleted,
+ * @property targetId ID of the aircraft being modified or deleted,
  *   or null if proposing a new aircraft.
- * @property resultAircraftId ID of the resulting aircraft after acceptance,
+ * @property resultId ID of the resulting aircraft after acceptance,
  *   or null if pending or rejected.
  * @property authorId ID of the user who submitted the proposal.
  * @property aircraftTypeId ID of the aircraft type associated with the proposed aircraft.
@@ -28,17 +28,21 @@ import kotlin.uuid.Uuid
  * @property checkedAt Timestamp when the proposal was reviewed, or null if pending.
  */
 data class AircraftProposal(
-    val id: Long,
-    val targetAircraftId: Long?,
-    val resultAircraftId: Long?,
-    val authorId: Uuid,
+    override val id: Long,
+    override val targetId: Long?,
+    override val resultId: Long?,
+    override val authorId: Uuid,
     val aircraftTypeId: Long,
     val registration: AircraftRegistration,
-    val delete: Boolean,
-    val proposalComment: String?,
-    val createdAt: Instant,
-    val checkedBy: Uuid?,
-    val checkResult: CheckResult?,
-    val checkResultComment: String?,
-    val checkedAt: Instant?,
-)
+    override val delete: Boolean,
+    override val proposalComment: String?,
+    override val createdAt: Instant,
+    override val checkedBy: Uuid?,
+    override val checkResult: CheckResult?,
+    override val checkResultComment: String?,
+    override val checkedAt: Instant?,
+): Proposal {
+    init{
+        checkSanity()
+    }
+}

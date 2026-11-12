@@ -12,16 +12,17 @@ import org.ouraircraft.model.data.ManufacturerProposal
  */
 fun ResultRow.toManufacturerProposal(): ManufacturerProposal = ManufacturerProposal(
     id = this[ManufacturerProposalTable.id].value,
-    targetManufacturerId = this[ManufacturerProposalTable.targetManufacturerId]?.value,
-    resultManufacturerId = this[ManufacturerProposalTable.resultManufacturerId]?.value,
+    targetId = this[ManufacturerProposalTable.targetManufacturerId]?.value,
+    resultId = this[ManufacturerProposalTable.resultManufacturerId]?.value,
     authorId = this[ManufacturerProposalTable.authorId],
-    name = this[ManufacturerProposalTable.name],
-    longName = this[ManufacturerProposalTable.longName],
     delete = this[ManufacturerProposalTable.delete],
     proposalComment = this[ManufacturerProposalTable.proposalComment],
     createdAt = this[ManufacturerProposalTable.createdAt],
     checkedBy = this[ManufacturerProposalTable.checkedBy],
     checkResult = this[ManufacturerProposalTable.checkResult],
-    checkComment = this[ManufacturerProposalTable.checkResultComment],
+    checkResultComment = this[ManufacturerProposalTable.checkResultComment],
     checkedAt = this[ManufacturerProposalTable.checkedAt],
+
+    name = this[ManufacturerProposalTable.name],
+    longName = this[ManufacturerProposalTable.longName],
 )

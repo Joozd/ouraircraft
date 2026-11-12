@@ -8,7 +8,9 @@ import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.update
 import org.ouraircraft.db.exceptions.ProposalNotFoundByIdException
+import org.ouraircraft.db.exceptions.TargetItemForProposalNotFoundByIdException
 import org.ouraircraft.db.helpers.startsWith
 import org.ouraircraft.db.repository.AircraftRepository
 import org.ouraircraft.db.repository.convertors.toAircraft
@@ -22,6 +24,7 @@ import org.ouraircraft.model.data.Aircraft
 import org.ouraircraft.model.data.AircraftProposal
 import org.ouraircraft.model.data.CheckResult
 
+// TODO move to settings
 private const val MAX_PREFIX_MATCHES = 20
 
 /**
@@ -49,13 +52,13 @@ internal fun findAircraftByIdInTransaction(id: Long): Aircraft? =
  * @return Matching aircraft, or an empty list if none are found.
  */
 context(tx: JdbcTransaction)
-internal fun getAircraftByRegistrationPrefixInTransaction(prefix: String): List<Aircraft> =
+internal fun getAircraftByRegistrationPrefixInTransaction(prefix: String, maxMatches: Int = MAX_PREFIX_MATCHES): List<Aircraft> =
     AircraftTable
         .innerJoin(AircraftTypeTable)
         .innerJoin(ManufacturerTable)
         .selectAll()
         .where { AircraftTable.registration startsWith prefix }
-        .limit(MAX_PREFIX_MATCHES)
+        .limit(maxMatches)
         .map { it.toAircraft() }
 
 
@@ -65,8 +68,8 @@ internal fun getAircraftByRegistrationPrefixInTransaction(prefix: String): List<
 context(tx: JdbcTransaction)
 internal fun insertAircraftProposalInTransaction(proposal: AircraftProposal) {
     AircraftProposalTable.insert { row ->
-        row[AircraftProposalTable.targetAircraftId] = proposal.targetAircraftId
-        row[AircraftProposalTable.resultAircraftId] = proposal.resultAircraftId
+        row[AircraftProposalTable.targetAircraftId] = proposal.targetId
+        row[AircraftProposalTable.resultAircraftId] = proposal.resultId
         row[AircraftProposalTable.authorId] = proposal.authorId
         row[AircraftProposalTable.aircraftTypeId] = proposal.aircraftTypeId
 
@@ -83,7 +86,7 @@ internal fun insertAircraftProposalInTransaction(proposal: AircraftProposal) {
 
 /**
  * Gets all aircraft proposals awaiting review.
- * @return a list of all AircraftProposal in database where [AircraftProposalTable.createdAt] is null,
+ * @return a list of all AircraftProposal in database where [AircraftProposalTable.checkResult] is null,
  *  ordered by time of creation (oldest first)
  */
 context(tx: JdbcTransaction)
@@ -104,6 +107,58 @@ internal fun AircraftRepository.getAircraftProposalByIdInTransaction(id: Long): 
         .where { AircraftProposalTable.id eq id }
         .singleOrNull()
         ?.toAircraftProposal()
+
+/**
+ * Creates an Aircraft from an AircraftProposal.
+ *
+ * [proposal] does not need to include review data at this point.
+ */
+context(tx: JdbcTransaction)
+internal fun AircraftRepository.createAircraftFromProposalInTransaction(proposal: AircraftProposal): Long =
+    AircraftTable.insertAndGetId { row ->
+        row[aircraftTypeId] = proposal.aircraftTypeId
+        row[registration] = proposal.registration
+        row[deleted] = false
+    }.value
+
+
+/**
+ * Updates an Aircraft from an AircraftProposal.
+ *
+ * [proposal] does not need to include review data at this point.
+ *
+ * @throws NullPointerException if [proposal] has no target ID.
+ * @throws TargetItemForProposalNotFoundByIdException if the target aircraft does not exist.
+ */
+context(tx: JdbcTransaction)
+internal fun AircraftRepository.updateAircraftFromProposalInTransaction(proposal: AircraftProposal): Long {
+    val targetId = proposal.targetId!!
+    val updatedRows = AircraftTable.update(where = { AircraftTable.id eq targetId }) { row ->
+        row[aircraftTypeId] = proposal.aircraftTypeId
+        row[registration] = proposal.registration
+    }
+    if (updatedRows == 0) throw TargetItemForProposalNotFoundByIdException(targetId, proposal.id)
+    return targetId
+}
+
+/**
+ * Marks the target aircraft as deleted.
+ *
+ * [proposal] does not need to include review data at this point.
+ * Does not check whether the proposal requests deletion.
+ *
+ * @throws NullPointerException if [proposal] has no target ID.
+ * @throws TargetItemForProposalNotFoundByIdException if the target aircraft does not exist.
+ */
+context(tx: JdbcTransaction)
+internal fun AircraftRepository.softDeleteAircraftFromProposalInTransaction(proposal: AircraftProposal): Long {
+    val targetId = proposal.targetId!!
+    val updatedRows = AircraftTable.update(where = { AircraftTable.id eq targetId }) { row ->
+        row[deleted] = true
+    }
+    if (updatedRows == 0) throw TargetItemForProposalNotFoundByIdException(targetId, proposal.id)
+    return targetId
+}
 
 /**
  * Marks the proposal as checked.
@@ -132,14 +187,3 @@ internal fun AircraftRepository.markAircraftProposalAsCheckedInTransaction(id: L
         row[resultAircraftId] = aircraftId
     }
 }
-
-/**
- * Creates an Aircraft from an AircraftProposal.
- * [proposal] does not need to include checking data at this point.
- */
-context(tx: JdbcTransaction)
-internal fun AircraftRepository.createAircraftFromProposalInTransaction(proposal: AircraftProposal): Long =
-    AircraftTable.insertAndGetId { row ->
-        row[aircraftTypeId] = proposal.aircraftTypeId
-        row[registration] = proposal.registration
-    }.value

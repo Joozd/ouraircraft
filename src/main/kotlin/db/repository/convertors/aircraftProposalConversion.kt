@@ -12,8 +12,8 @@ import org.ouraircraft.model.data.AircraftProposal
  */
 fun ResultRow.toAircraftProposal(): AircraftProposal = AircraftProposal(
     id = this[AircraftProposalTable.id].value,
-    targetAircraftId = this[AircraftProposalTable.targetAircraftId]?.value,
-    resultAircraftId = this[AircraftProposalTable.resultAircraftId]?.value,
+    targetId = this[AircraftProposalTable.targetAircraftId]?.value,
+    resultId = this[AircraftProposalTable.resultAircraftId]?.value,
     authorId = this[AircraftProposalTable.authorId],
     aircraftTypeId = this[AircraftProposalTable.aircraftTypeId].value,
     registration = this[AircraftProposalTable.registration],

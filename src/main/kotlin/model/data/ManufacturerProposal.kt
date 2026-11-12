@@ -11,9 +11,9 @@ import kotlin.uuid.Uuid
  * once when the proposal is accepted or rejected.
  *
  * @property id Unique identifier of this proposal.
- * @property targetManufacturerId ID of the manufacturer being modified or deleted,
+ * @property targetId ID of the manufacturer being modified or deleted,
  *   or null if proposing a new manufacturer.
- * @property resultManufacturerId ID of the resulting manufacturer after acceptance,
+ * @property resultId ID of the resulting manufacturer after acceptance,
  *   or null if pending or rejected.
  * @property authorId ID of the user who submitted the proposal.
  * @property name Proposed manufacturer name.
@@ -23,21 +23,26 @@ import kotlin.uuid.Uuid
  * @property createdAt Timestamp when the proposal was submitted.
  * @property checkedBy ID of the reviewing user, or null if pending.
  * @property checkResult Review decision, or null if pending.
- * @property checkComment Optional explanation provided by the reviewer.
+ * @property checkResultComment Optional explanation provided by the reviewer.
  * @property checkedAt Timestamp when the proposal was reviewed, or null if pending.
  */
 data class ManufacturerProposal(
-    val id: Long,
-    val targetManufacturerId: Long?,
-    val resultManufacturerId: Long?,
-    val authorId: Uuid,
+    override val id: Long = -1,
+    override val targetId: Long?,
+    override val resultId: Long?,
+    override val authorId: Uuid,
+    override val delete: Boolean,
+    override val proposalComment: String?,
+    override val createdAt: Instant,
+    override val checkedBy: Uuid?,
+    override val checkResult: CheckResult?,
+    override val checkResultComment: String?,
+    override val checkedAt: Instant?,
+
     val name: String,
     val longName: String?,
-    val delete: Boolean,
-    val proposalComment: String?,
-    val createdAt: Instant,
-    val checkedBy: Uuid?,
-    val checkResult: CheckResult?,
-    val checkComment: String?,
-    val checkedAt: Instant?,
-)
+): Proposal {
+    init{
+        checkSanity()
+    }
+}

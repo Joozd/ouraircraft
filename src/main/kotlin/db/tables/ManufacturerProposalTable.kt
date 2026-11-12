@@ -25,8 +25,9 @@ object ManufacturerProposalTable: CheckableTable("MANUFACTURER_PROPOSAL") {
     val targetManufacturerId = reference("target_manufacturer_id", ManufacturerTable.id).nullable()
     val resultManufacturerId = reference("result_manufacturer_id", ManufacturerTable.id).nullable()
     val authorId = reference("author_id", UserTable.id).index()
-    val name = text("name")
-    val longName = text("long_name").nullable()
     val delete = bool("delete")
     val proposalComment = text("proposal_comment").nullable()
+
+    val name = text("name")
+    val longName = text("long_name").nullable()
 }

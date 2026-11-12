@@ -13,4 +13,5 @@ import org.ouraircraft.db.helpers.asAircraftRegistration
 object AircraftTable : LongIdTable("AIRCRAFT") {
     val aircraftTypeId = reference("aircraft_type_id", AircraftTypeTable.id).index()
     val registration = text("registration").asAircraftRegistration().index()
+    val deleted = bool("deleted")
 }

@@ -5,11 +5,13 @@ import org.ouraircraft.auth.UserAuthorization
 import org.ouraircraft.db.Database
 import org.ouraircraft.db.exceptions.AlreadyCheckedException
 import org.ouraircraft.db.exceptions.ProposalNotFoundByIdException
+import org.ouraircraft.db.exceptions.TargetItemForProposalNotFoundByIdException
 import org.ouraircraft.db.repository.ops.*
 import org.ouraircraft.model.auth.User
 import org.ouraircraft.model.data.Aircraft
 import org.ouraircraft.model.data.AircraftProposal
 import org.ouraircraft.model.data.CheckResult
+import org.ouraircraft.model.data.Proposal
 
 /**
  * Provides access to aircraft records in the database.
@@ -36,20 +38,10 @@ class AircraftRepository(val database: Database) {
             getAircraftByRegistrationPrefixInTransaction(prefix)
         }
 
-
-    /**
-     * Finds an aircraft by its unique database [id].
-     *
-     * @return The aircraft, or null if no matching record exists.
-     */
-    fun getAircraftById(id: Long, user: User): Aircraft? =
-        transaction(database.exposed) {
-            user.requireAuthorization(UserAuthorization.DISPLAY_AIRCRAFT)
-            findAircraftByIdInTransaction(id)
-        }
-
     /**
      * Insert a new aircraft proposal into the database.
+     * The user mentioned in the proposal needs to be checked/inserted by the service calling this;
+     * this wil store 'as is'.
      */
     fun insertAircraftProposal(proposal: AircraftProposal, user: User) =
         transaction(database.exposed) {
@@ -68,19 +60,20 @@ class AircraftRepository(val database: Database) {
 
 
     /**
-     * Handle the result of checking an Aircraft Proposal.
-     * This will, in a single transaction, update the Proposal record,
-     * and, if the result is [CheckResult.APPROVED], create or an Aircraft record.
+     * Handles the result of reviewing an Aircraft proposal.
      *
-     * @param proposalId The ID of the Proposal that is being updated
-     * @param checkResult The result of the check
-     * @param user The User that did this check
-     * @param comment Any comments the checker might want to add.
+     * In a single transaction, updates the proposal's review fields and,
+     * if approved, creates, updates, or soft-deletes the aircraft.
+     *
+     * @param proposalId ID of the proposal being reviewed.
+     * @param checkResult Review decision.
+     * @param comment Optional explanation provided by the reviewer.
+     * @param user User who performed the review.
      *
      * @throws org.ouraircraft.auth.exceptions.UserNotAuthorizedForThisException if [user] is not authorized for this action.
-     * @throws AlreadyCheckedException if the proposal was already checked
-     * @throws ProposalNotFoundByIdException if the proposal does not exist in the DB
-     *
+     * @throws AlreadyCheckedException if the proposal was already reviewed.
+     * @throws ProposalNotFoundByIdException if the proposal does not exist.
+     * @throws TargetItemForProposalNotFoundByIdException if the aircraft to update or soft-delete does not exist.
      */
     fun checkAircraftProposal(proposalId: Long, checkResult: CheckResult, comment: String?, user: User) {
         user.requireAuthorization(UserAuthorization.DECIDE_ON_PROPOSED_AIRCRAFT)
@@ -88,13 +81,18 @@ class AircraftRepository(val database: Database) {
         transaction(database.exposed) {
             // check if this proposal (still) needs to be checked
             val proposal = getAircraftProposalByIdInTransaction(proposalId)
-                ?.also{ if(it.checkResult != null) throw AlreadyCheckedException("AircraftProposal $proposalId has already been checked.") }
+                ?.also { if (it.checkResult != null) throw AlreadyCheckedException("AircraftProposal $proposalId has already been checked.") }
                 ?: throw ProposalNotFoundByIdException(proposalId)
 
-            // if approved, make the Aircraft, else leave at null.
-            val aircraftId =
-                if(checkResult == CheckResult.APPROVED) createAircraftFromProposalInTransaction(proposal)
-                else null
+            val proposalType = proposal.type(checkResult)
+
+            val aircraftId = when (proposalType) {
+                Proposal.Type.NEW -> createAircraftFromProposalInTransaction(proposal)
+                Proposal.Type.UPDATE -> updateAircraftFromProposalInTransaction(proposal)
+                Proposal.Type.DELETE -> softDeleteAircraftFromProposalInTransaction(proposal)
+                Proposal.Type.REJECTED -> null
+                Proposal.Type.PENDING -> error("This is a bug, Type cannot be pending here. Bug 1 in AircraftRepository.checkAircraftProposal()")
+            }
 
             markAircraftProposalAsCheckedInTransaction(proposalId, checkResult, user, comment, aircraftId)
         }
