@@ -3,7 +3,7 @@ package org.ouraircraft.crypt
 import kotlinx.io.bytestring.ByteString
 import org.ouraircraft.auth.RecoveryToken
 import org.ouraircraft.auth.Token
-import org.ouraircraft.model.services.CryptoService
+import org.ouraircraft.model.services.users.CryptoService
 import java.nio.file.Path
 import java.util.Locale
 import javax.crypto.KDF

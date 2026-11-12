@@ -12,7 +12,7 @@ import org.ouraircraft.db.exceptions.EmailAlreadyInUseException
 import org.ouraircraft.db.exceptions.UserAlreadyExistsException
 import org.ouraircraft.model.dto.ApiError
 import org.ouraircraft.model.dto.NewUserRegistrationData
-import org.ouraircraft.model.services.UserManagementService
+import org.ouraircraft.model.services.users.UserManagementService
 
 /**
  * Creates a new pending user registration and returns a link with its activation token.

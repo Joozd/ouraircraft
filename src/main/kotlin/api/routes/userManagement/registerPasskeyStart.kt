@@ -8,8 +8,8 @@ import io.ktor.openapi.JsonSchema
 import io.ktor.openapi.JsonType
 import io.ktor.openapi.jsonSchema
 import org.ouraircraft.api.routes.callfunctions.getPasskeyAddingSession
-import org.ouraircraft.model.services.PasskeyCeremonies
-import org.ouraircraft.model.services.SessionService
+import org.ouraircraft.model.services.users.PasskeyCeremonies
+import org.ouraircraft.model.services.users.SessionService
 
 
 /**

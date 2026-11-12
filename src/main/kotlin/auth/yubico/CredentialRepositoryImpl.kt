@@ -6,7 +6,7 @@ import com.yubico.webauthn.data.PublicKeyCredentialDescriptor
 import kotlinx.coroutines.runBlocking
 import org.ouraircraft.auth.util.mapToOptional
 import org.ouraircraft.auth.util.toOptional
-import org.ouraircraft.model.services.PasskeyService
+import org.ouraircraft.model.services.users.PasskeyService
 import org.ouraircraft.model.auth.valueclasses.PasskeyCredentialId
 import java.util.*
 import com.yubico.webauthn.data.ByteArray as YubicoBytearray

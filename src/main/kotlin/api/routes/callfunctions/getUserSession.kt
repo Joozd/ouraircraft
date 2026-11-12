@@ -5,7 +5,7 @@ import org.ouraircraft.api.cookies.NoSessionCookieFoundException
 import org.ouraircraft.api.cookies.readUserSessionCookie
 import org.ouraircraft.api.routes.sessions.respondToBadLogin
 import org.ouraircraft.model.dto.sessions.UserSessionData
-import org.ouraircraft.model.services.SessionService
+import org.ouraircraft.model.services.users.SessionService
 
 /**
  * Gets a [org.ouraircraft.model.dto.sessions.PasskeyAddingSessionData] object for the current session.

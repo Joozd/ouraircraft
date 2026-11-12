@@ -6,7 +6,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.routing.openapi.*
 import org.ouraircraft.model.dto.PasskeyRequest
-import org.ouraircraft.model.services.PasskeyCeremonies
+import org.ouraircraft.model.services.users.PasskeyCeremonies
 
 fun Route.webAuthnStart(passkeyCeremonies: PasskeyCeremonies) {
     post("/api/users/webauthn/start") {

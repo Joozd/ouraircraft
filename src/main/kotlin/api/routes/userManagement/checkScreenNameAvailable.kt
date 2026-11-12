@@ -7,7 +7,7 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.*
 import io.ktor.server.routing.openapi.describe
 import org.ouraircraft.model.dto.ScreenNameAvailable
-import org.ouraircraft.model.services.UserManagementService
+import org.ouraircraft.model.services.users.UserManagementService
 
 fun Route.checkScreenNameAvailable(userManagementService: UserManagementService) {
     get("/api/usernames/{username}/availability") {

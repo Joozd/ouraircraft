@@ -14,8 +14,8 @@ import org.ouraircraft.api.routes.callfunctions.getPasskeyAddingSession
 import org.ouraircraft.auth.exceptions.RegistrationFailedException
 import org.ouraircraft.auth.exceptions.TokenNotFoundException
 import org.ouraircraft.model.dto.PasskeyRegistrationResponse
-import org.ouraircraft.model.services.PasskeyCeremonies
-import org.ouraircraft.model.services.SessionService
+import org.ouraircraft.model.services.users.PasskeyCeremonies
+import org.ouraircraft.model.services.users.SessionService
 
 /**
  * Verifies and stores a new passkey for a user with a valid passkey-adding session.

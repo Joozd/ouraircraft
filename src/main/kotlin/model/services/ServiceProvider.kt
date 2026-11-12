@@ -13,6 +13,10 @@ import org.ouraircraft.auth.yubico.CredentialRepositoryImpl
 import org.ouraircraft.auth.yubico.YubicoPasskeyCeremoniesImpl
 import org.ouraircraft.db.service.PasskeyServiceImpl
 import org.ouraircraft.db.repository.AuthRepository
+import org.ouraircraft.model.services.users.CryptoService
+import org.ouraircraft.model.services.users.PasskeyCeremonies
+import org.ouraircraft.model.services.users.SessionService
+import org.ouraircraft.model.services.users.UserManagementService
 
 class ServiceProvider(
     cryptoService: CryptoService,

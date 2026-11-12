@@ -7,7 +7,7 @@ import io.ktor.server.routing.*
 import io.ktor.server.routing.openapi.*
 import org.ouraircraft.api.cookies.deleteUserSessionCookie
 import org.ouraircraft.api.routes.callfunctions.getUserSession
-import org.ouraircraft.model.services.SessionService
+import org.ouraircraft.model.services.users.SessionService
 
 /**
  * Logs out the current session

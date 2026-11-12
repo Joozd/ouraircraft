@@ -2,7 +2,7 @@ package org.ouraircraft.crypt
 
 import kotlinx.io.bytestring.ByteString
 import org.ouraircraft.auth.Token
-import org.ouraircraft.model.services.CryptoService
+import org.ouraircraft.model.services.users.CryptoService
 
 /** Predictable test double; deliberately provides no cryptographic protection. */
 internal class TestingCryptoService : CryptoService {

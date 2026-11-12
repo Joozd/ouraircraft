@@ -11,8 +11,8 @@ import io.ktor.server.routing.post
 import org.ouraircraft.api.cookies.placePasskeyAddingSessionCookie
 import org.ouraircraft.api.routes.sessions.respondToBadLogin
 import org.ouraircraft.model.dto.EmailVerificationData
-import org.ouraircraft.model.services.SessionService
-import org.ouraircraft.model.services.UserManagementService
+import org.ouraircraft.model.services.users.SessionService
+import org.ouraircraft.model.services.users.UserManagementService
 
 fun Route.elevatePendingUser(
     userManagementService: UserManagementService,

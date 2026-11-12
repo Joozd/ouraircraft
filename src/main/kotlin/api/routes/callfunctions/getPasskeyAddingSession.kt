@@ -3,7 +3,7 @@ package org.ouraircraft.api.routes.callfunctions
 import io.ktor.server.application.*
 import org.ouraircraft.api.cookies.readPasskeyAddingCookie
 import org.ouraircraft.model.dto.sessions.PasskeyAddingSessionData
-import org.ouraircraft.model.services.SessionService
+import org.ouraircraft.model.services.users.SessionService
 
 /**
  * Gets a [PasskeyAddingSessionData] object for the current session.

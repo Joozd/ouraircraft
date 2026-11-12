@@ -1,4 +1,4 @@
-package org.ouraircraft.model.services
+package org.ouraircraft.model.services.users
 
 import org.ouraircraft.model.auth.PasskeyData
 import org.ouraircraft.model.dto.PasskeyRegistrationResponse

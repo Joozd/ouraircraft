@@ -11,7 +11,7 @@ import org.ouraircraft.db.UserRole
 import org.ouraircraft.db.tables.UserTable
 import org.ouraircraft.db.service.PasskeyServiceImpl
 import org.ouraircraft.db.service.UserManagementServiceImpl
-import org.ouraircraft.model.services.PasskeyService
+import org.ouraircraft.model.services.users.PasskeyService
 import org.ouraircraft.model.services.factories.LinkFactory
 import org.ouraircraft.db.repository.AuthRepository
 import org.ouraircraft.db.repository.UserRepository

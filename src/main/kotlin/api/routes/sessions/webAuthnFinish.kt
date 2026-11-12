@@ -11,8 +11,8 @@ import org.ouraircraft.auth.exceptions.AuthException
 import org.ouraircraft.auth.exceptions.BadCredentialsException
 import org.ouraircraft.auth.exceptions.PasskeyCeremonyNotFoundException
 import org.ouraircraft.model.dto.PasskeyResponse
-import org.ouraircraft.model.services.PasskeyCeremonies
-import org.ouraircraft.model.services.SessionService
+import org.ouraircraft.model.services.users.PasskeyCeremonies
+import org.ouraircraft.model.services.users.SessionService
 
 /**
  * Completes a passkey authentication ceremony and creates a user session.

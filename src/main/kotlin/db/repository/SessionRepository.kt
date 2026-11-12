@@ -9,7 +9,7 @@ import org.ouraircraft.db.Database
 import org.ouraircraft.db.exceptions.SessionNotFoundByIdException
 import org.ouraircraft.model.dto.sessions.PasskeyAddingSessionData
 import org.ouraircraft.model.dto.sessions.UserSessionData
-import org.ouraircraft.model.services.CryptoService
+import org.ouraircraft.model.services.users.CryptoService
 import org.ouraircraft.db.repository.ops.extendUserSessionInTransaction
 import org.ouraircraft.db.repository.ops.getPasskeyAddingSessionDataFromToken
 import org.ouraircraft.db.repository.ops.getUserFromRecoveryToken

@@ -23,9 +23,9 @@ import org.ouraircraft.model.auth.PasskeyData
 import org.ouraircraft.model.dto.PasskeyRegistrationResponse
 import org.ouraircraft.model.dto.PasskeyRequest
 import org.ouraircraft.model.dto.PasskeyResponse
-import org.ouraircraft.model.services.PasskeyCeremonies
-import org.ouraircraft.model.services.PasskeyService
-import org.ouraircraft.model.services.UserManagementService
+import org.ouraircraft.model.services.users.PasskeyCeremonies
+import org.ouraircraft.model.services.users.PasskeyService
+import org.ouraircraft.model.services.users.UserManagementService
 import org.ouraircraft.model.auth.valueclasses.PasskeyCredentialId
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes

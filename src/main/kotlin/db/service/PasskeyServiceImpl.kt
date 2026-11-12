@@ -3,7 +3,7 @@ package org.ouraircraft.db.service
 import org.ouraircraft.db.exceptions.UserNotFoundByIDException
 import org.ouraircraft.model.services.utils.runCatchingAndMapToDomainException
 import org.ouraircraft.model.auth.PasskeyData
-import org.ouraircraft.model.services.PasskeyService
+import org.ouraircraft.model.services.users.PasskeyService
 import org.ouraircraft.model.auth.valueclasses.PasskeyCredentialId
 import org.ouraircraft.db.repository.AuthRepository
 import org.ouraircraft.db.repository.UserRepository

@@ -4,7 +4,7 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.ouraircraft.auth.EmailVerificationToken
 import org.ouraircraft.auth.RecoveryToken
 import org.ouraircraft.auth.exceptions.TokenMismatchException
-import org.ouraircraft.model.services.CryptoService
+import org.ouraircraft.model.services.users.CryptoService
 import org.ouraircraft.db.Database
 import org.ouraircraft.db.exceptions.UserNotFoundByIDException
 import org.ouraircraft.model.auth.PendingUserRegistration

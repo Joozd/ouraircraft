@@ -11,7 +11,7 @@ import org.ouraircraft.api.cookies.placePasskeyAddingSessionCookie
 import org.ouraircraft.auth.RecoveryToken
 import org.ouraircraft.auth.exceptions.TokenNotFoundException
 import org.ouraircraft.model.dto.DtoToken
-import org.ouraircraft.model.services.SessionService
+import org.ouraircraft.model.services.users.SessionService
 
 /**
  * Registers an endpoint that exchanges a recovery token for a passkey-adding

@@ -9,7 +9,7 @@ import org.ouraircraft.model.auth.PasskeyData
 import org.ouraircraft.model.dto.sessions.PasskeyAddingSessionData
 import org.ouraircraft.model.dto.sessions.UserSessionData
 import org.ouraircraft.db.repository.SessionRepository
-import org.ouraircraft.model.services.SessionService
+import org.ouraircraft.model.services.users.SessionService
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Instant

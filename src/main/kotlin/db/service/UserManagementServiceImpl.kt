@@ -13,7 +13,7 @@ import org.ouraircraft.model.dto.EmailVerificationData
 import org.ouraircraft.model.dto.NewUserRegistrationData
 import org.ouraircraft.model.dto.ScreenNameAvailable
 import org.ouraircraft.db.repository.UserRepository
-import org.ouraircraft.model.services.UserManagementService
+import org.ouraircraft.model.services.users.UserManagementService
 import org.ouraircraft.model.services.factories.LinkFactory
 import java.net.URI
 import kotlin.uuid.Uuid

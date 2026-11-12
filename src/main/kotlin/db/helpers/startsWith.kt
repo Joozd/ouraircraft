@@ -14,6 +14,7 @@ private const val MINIMUM_SEARCH_LENGTH = 2
  * Matches aircraft registrations starting with [query].
  * Requires at least two alphanumeric characters after normalization.
  */
+@JvmName("registrationStartsWith") // prevent JVM clash after erasing type
 infix fun Column<AircraftRegistration>.startsWith(query: String): Op<Boolean> {
     val prefix = query.normalizeRegistration()
     if (prefix.length < MINIMUM_SEARCH_LENGTH) return Op.FALSE
@@ -24,3 +25,24 @@ infix fun Column<AircraftRegistration>.startsWith(query: String): Op<Boolean> {
     }
 }
 
+/**
+ * Matches strings starting with [query].
+ *
+ * Requires at least two characters after trimming whitespace.
+ * Escapes SQL LIKE wildcards to ensure literal prefix matching.
+ *
+ * Case sensitivity depends on the database's LIKE behavior.
+ */
+infix fun Column<String>.startsWith(query: String): Op<Boolean> {
+    val prefix = query.trim()
+        .also { if (it.length < MINIMUM_SEARCH_LENGTH) return Op.FALSE }
+        .replace("!", "!!")
+        .replace("%", "!%")
+        .replace("_", "!_")
+
+    return op {
+        appendAll(this@startsWith, " LIKE ")
+        registerArgument(TextColumnType(), "$prefix%")
+        append(" ESCAPE '!'")
+    }
+}

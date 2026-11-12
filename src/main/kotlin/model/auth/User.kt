@@ -1,7 +1,6 @@
 package org.ouraircraft.model.auth
 
 import org.ouraircraft.auth.UserAuthorization
-import org.ouraircraft.auth.exceptions.AuthException
 import org.ouraircraft.auth.exceptions.UserNotAuthorizedForThisException
 import org.ouraircraft.crypt.EncryptedAesGcmText
 import kotlin.time.Instant

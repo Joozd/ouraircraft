@@ -1,4 +1,4 @@
-package org.ouraircraft.model.services
+package org.ouraircraft.model.services.users
 
 import org.ouraircraft.auth.PasskeyAddingSessionToken
 import org.ouraircraft.auth.RecoveryToken

@@ -2,7 +2,7 @@ package org.ouraircraft
 
 import org.ouraircraft.api.ApiServer
 import org.ouraircraft.db.createInMemoryDB
-import org.ouraircraft.model.services.CryptoService
+import org.ouraircraft.model.services.users.CryptoService
 import org.ouraircraft.model.services.ServiceProvider
 
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
