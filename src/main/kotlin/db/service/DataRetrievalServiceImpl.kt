@@ -8,6 +8,7 @@ import org.ouraircraft.model.auth.User
 import org.ouraircraft.model.data.Aircraft
 import org.ouraircraft.model.data.AircraftType
 import org.ouraircraft.model.data.Manufacturer
+import org.ouraircraft.model.data.PagedResult
 import org.ouraircraft.model.services.data.DataRetrievalService
 import org.ouraircraft.model.services.utils.runCatchingAndMapToDomainException
 
@@ -23,9 +24,10 @@ class DataRetrievalServiceImpl(
     override suspend fun getManufacturersByNamePrefix(
         namePrefix: String,
         user: User
-    ): Result<List<Manufacturer>> = runCatchingAndMapToDomainException {
+    ): Result<PagedResult<Manufacturer>> = runCatchingAndMapToDomainException {
         user.requireAuthorization(UserAuthorization.DISPLAY_MANUFACTURERS)
-        manufacturerRepository.getManufacturersByNamePrefix(namePrefix, user)
+
+        manufacturerRepository.getManufacturersByNamePrefix(user, namePrefix)
     }
 
     /**
@@ -35,9 +37,9 @@ class DataRetrievalServiceImpl(
     override suspend fun getAircraftTypesByFamilyPrefix(
         familyPrefix: String,
         user: User
-    ): Result<List<AircraftType>> = runCatchingAndMapToDomainException {
+    ): Result<PagedResult<AircraftType>> = runCatchingAndMapToDomainException {
         user.requireAuthorization(UserAuthorization.DISPLAY_AIRCRAFT_TYPES)
-        aircraftTypeRepository.getAircraftTypesByFamilyPrefix(familyPrefix, user)
+        aircraftTypeRepository.getAircraftTypesByFamilyPrefix(user, familyPrefix)
     }
 
     /**
@@ -47,9 +49,9 @@ class DataRetrievalServiceImpl(
     override suspend fun getAircraftTypesByDesignatorPrefix(
         designatorPrefix: String,
         user: User
-    ): Result<List<AircraftType>> = runCatchingAndMapToDomainException {
+    ): Result<PagedResult<AircraftType>> = runCatchingAndMapToDomainException {
         user.requireAuthorization(UserAuthorization.DISPLAY_AIRCRAFT_TYPES)
-        aircraftTypeRepository.getAircraftTypesByDesignatorPrefix(designatorPrefix, user)
+        aircraftTypeRepository.getAircraftTypesByDesignatorPrefix(user, designatorPrefix)
     }
 
     /**
@@ -59,8 +61,8 @@ class DataRetrievalServiceImpl(
     override suspend fun getAircraftByRegistrationPrefix(
         registrationPrefix: String,
         user: User
-    ): Result<List<Aircraft>> = runCatchingAndMapToDomainException {
+    ): Result<PagedResult<Aircraft>> = runCatchingAndMapToDomainException {
         user.requireAuthorization(UserAuthorization.DISPLAY_AIRCRAFT)
-        aircraftRepository.getAircraftByRegistrationPrefix(registrationPrefix, user)
+        aircraftRepository.getAircraftByRegistrationPrefix(user, registrationPrefix,)
     }
 }

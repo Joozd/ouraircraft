@@ -39,29 +39,29 @@ interface ProposalService {
      * Propose a new Manufacturer.
      * Required authorization: [UserAuthorization.PROPOSE_MANUFACTURERS]
      */
-    suspend fun proposeManufacturer(proposedManufacturer: ManufacturerProposal, user: User): Result<Unit>
+    suspend fun proposeManufacturer(user: User, proposedManufacturer: ManufacturerProposal): Result<Unit>
 
     /**
      * Propose a new Aircraft Type
      * Required authorization: [UserAuthorization.PROPOSE_AIRCRAFT_TYPES]
      */
-    suspend fun proposeAircraftType(proposedAircraftType: AircraftTypeProposal, user: User): Result<Unit>
+    suspend fun proposeAircraftType(user: User, proposedAircraftType: AircraftTypeProposal): Result<Unit>
 
     /**
      * Propose a new Aircraft.
      * Required authorization: [UserAuthorization.PROPOSE_AIRCRAFT]
      */
-    suspend fun proposeAircraft(proposedAircraft: AircraftProposal, user: User): Result<Unit>
+    suspend fun proposeAircraft(user: User, proposedAircraft: AircraftProposal): Result<Unit>
 
     /**
      * Handle the result of checking a proposed Manufacturer.
      * Required authorization: [UserAuthorization.DECIDE_ON_PROPOSED_MANUFACTURERS]
      */
     suspend fun handleManufactureProposalCheck(
+        user: User,
         checkedProposalId: Long,
         checkResult: CheckResult,
         checkResultComment: String,
-        user: User
     ): Result<Unit>
 
     /**
@@ -69,10 +69,10 @@ interface ProposalService {
      * Required authorization: [UserAuthorization.DECIDE_ON_PROPOSED_AIRCRAFT_TYPES]
      */
     suspend fun handleAircraftTypeProposalCheck(
+        user: User,
         checkedProposalId: Long,
         checkResult: CheckResult,
         checkResultComment: String,
-        user: User
     ): Result<Unit>
 
     /**
@@ -80,9 +80,9 @@ interface ProposalService {
      * Required authorization: [UserAuthorization.DECIDE_ON_PROPOSED_AIRCRAFT]
      */
     suspend fun handleAircraftProposalCheck(
+        user: User,
         checkedProposalId: Long,
         checkResult: CheckResult,
         checkResultComment: String,
-        user: User
     ): Result<Unit>
 }

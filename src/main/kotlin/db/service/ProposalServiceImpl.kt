@@ -59,11 +59,11 @@ class ProposalServiceImpl(
      * Required authorization: [UserAuthorization.PROPOSE_MANUFACTURERS]
      */
     override suspend fun proposeManufacturer(
+        user: User,
         proposedManufacturer: ManufacturerProposal,
-        user: User
     ): Result<Unit> = runCatchingAndMapToDomainException {
         user.requireAuthorization(UserAuthorization.PROPOSE_MANUFACTURERS)
-        manufacturerRepository.insertManufacturerProposal(proposedManufacturer, user)
+        manufacturerRepository.insertManufacturerProposal(user, proposedManufacturer)
     }
 
     /**
@@ -71,11 +71,11 @@ class ProposalServiceImpl(
      * Required authorization: [UserAuthorization.PROPOSE_AIRCRAFT_TYPES]
      */
     override suspend fun proposeAircraftType(
+        user: User,
         proposedAircraftType: AircraftTypeProposal,
-        user: User
     ): Result<Unit> = runCatchingAndMapToDomainException {
         user.requireAuthorization(UserAuthorization.PROPOSE_AIRCRAFT_TYPES)
-        aircraftTypeRepository.insertAircraftTypeProposal(proposedAircraftType, user)
+        aircraftTypeRepository.insertAircraftTypeProposal(user, proposedAircraftType)
     }
 
     /**
@@ -83,8 +83,8 @@ class ProposalServiceImpl(
      * Required authorization: [UserAuthorization.PROPOSE_AIRCRAFT]
      */
     override suspend fun proposeAircraft(
+        user: User,
         proposedAircraft: AircraftProposal,
-        user: User
     ): Result<Unit> = runCatchingAndMapToDomainException {
         user.requireAuthorization(UserAuthorization.PROPOSE_AIRCRAFT)
         aircraftRepository.insertAircraftProposal(proposedAircraft, user)
@@ -95,13 +95,13 @@ class ProposalServiceImpl(
      * Required authorization: [UserAuthorization.DECIDE_ON_PROPOSED_MANUFACTURERS]
      */
     override suspend fun handleManufactureProposalCheck(
+        user: User,
         checkedProposalId: Long,
         checkResult: CheckResult,
         checkResultComment: String,
-        user: User
     ): Result<Unit> = runCatchingAndMapToDomainException {
         user.requireAuthorization(UserAuthorization.DECIDE_ON_PROPOSED_MANUFACTURERS)
-        manufacturerRepository.checkManufacturerProposal(checkedProposalId, checkResult, checkResultComment.takeIf{it.isNotBlank()}, user)
+        manufacturerRepository.checkManufacturerProposal(user, checkedProposalId, checkResult, checkResultComment.takeIf{it.isNotBlank()})
     }
 
     /**
@@ -109,13 +109,13 @@ class ProposalServiceImpl(
      * Required authorization: [UserAuthorization.DECIDE_ON_PROPOSED_AIRCRAFT_TYPES]
      */
     override suspend fun handleAircraftTypeProposalCheck(
+        user: User,
         checkedProposalId: Long,
         checkResult: CheckResult,
         checkResultComment: String,
-        user: User
     ): Result<Unit> = runCatchingAndMapToDomainException {
         user.requireAuthorization(UserAuthorization.DECIDE_ON_PROPOSED_AIRCRAFT_TYPES)
-        aircraftTypeRepository.checkAircraftTypeProposal(checkedProposalId, checkResult, checkResultComment.takeIf{it.isNotBlank()}, user)
+        aircraftTypeRepository.checkAircraftTypeProposal(user, checkedProposalId, checkResult, checkResultComment.takeIf{it.isNotBlank()})
     }
 
     /**
@@ -123,10 +123,10 @@ class ProposalServiceImpl(
      * Required authorization: [UserAuthorization.DECIDE_ON_PROPOSED_AIRCRAFT]
      */
     override suspend fun handleAircraftProposalCheck(
+        user: User,
         checkedProposalId: Long,
         checkResult: CheckResult,
         checkResultComment: String,
-        user: User
     ): Result<Unit> = runCatchingAndMapToDomainException {
         user.requireAuthorization(UserAuthorization.DECIDE_ON_PROPOSED_AIRCRAFT)
         aircraftRepository.checkAircraftProposal(checkedProposalId, checkResult, checkResultComment.takeIf{it.isNotBlank()}, user)

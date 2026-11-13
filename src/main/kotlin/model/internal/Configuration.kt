@@ -6,13 +6,14 @@ import kotlin.time.Duration.Companion.minutes
 
 /**
  * This holds the complete configuration of the application.
+ * Standard settings are in-memory testing DB and sensible defaults.
  */
 data class Configuration(
     val programName: String = "OurAircraft",
     // When required, this can be split into subparts
-    val inMemoryDb: Boolean,
-    val configFileLocation: String?,
-    val hostName: String?,
+    val inMemoryDb: Boolean = true,
+    val configFileLocation: String? = null,
+    val hostName: String? = "http://localhost",
 
     val userSessionConfig: UserSessionConfig = UserSessionConfig(),
     val dataRetrievalConfig: DataRetrievalConfig = DataRetrievalConfig(),

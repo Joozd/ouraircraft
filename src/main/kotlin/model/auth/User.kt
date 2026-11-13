@@ -11,7 +11,7 @@ data class User(
     val screenName: String,
     val encryptedEmail: EncryptedAesGcmText,
     val createdAt: Instant,
-    private val authorizations: Set<UserAuthorization>
+    val authorizations: Set<UserAuthorization>
 ) {
     /**
      * Checks if the user has authorization [authorization]

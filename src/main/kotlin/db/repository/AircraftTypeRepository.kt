@@ -23,7 +23,7 @@ class AircraftTypeRepository(val database: Database, val config: Configuration.D
      *
      * @return Matching aircraft types, or an empty list if none are found.
      */
-    fun getAircraftTypesByFamilyPrefix(prefix: String, offset: Long = 0, user: User): PagedResult<AircraftType> =
+    fun getAircraftTypesByFamilyPrefix(user: User, prefix: String, offset: Long = 0): PagedResult<AircraftType> =
         transaction(database.exposed) {
             user.requireAuthorization(UserAuthorization.DISPLAY_AIRCRAFT_TYPES)
             getAircraftTypesByFamilyPrefixInTransaction(prefix, maxMatches = config.matchesPerPage, offset = offset)
@@ -36,7 +36,7 @@ class AircraftTypeRepository(val database: Database, val config: Configuration.D
      *
      * @return Matching aircraft types, or an empty list if none are found.
      */
-    fun getAircraftTypesByDesignatorPrefix(prefix: String, offset: Long = 0, user: User): PagedResult<AircraftType> =
+    fun getAircraftTypesByDesignatorPrefix(user: User, prefix: String, offset: Long = 0): PagedResult<AircraftType> =
         transaction(database.exposed) {
             user.requireAuthorization(UserAuthorization.DISPLAY_AIRCRAFT_TYPES)
             getAircraftTypesByDesignatorPrefixInTransaction(prefix, config.matchesPerPage, offset = offset)
@@ -48,7 +48,7 @@ class AircraftTypeRepository(val database: Database, val config: Configuration.D
      * The user mentioned in the proposal needs to be checked/inserted by the service calling this;
      * this wil store 'as is'.
      */
-    fun insertAircraftTypeProposal(proposal: AircraftTypeProposal, user: User) =
+    fun insertAircraftTypeProposal(user: User, proposal: AircraftTypeProposal) =
         transaction(database.exposed) {
             user.requireAuthorization(UserAuthorization.PROPOSE_AIRCRAFT_TYPES)
 
@@ -81,7 +81,7 @@ class AircraftTypeRepository(val database: Database, val config: Configuration.D
      * @throws ProposalNotFoundByIdException if the proposal does not exist.
      * @throws TargetItemForProposalNotFoundByIdException if the aircraft type to update or soft-delete does not exist.
      */
-    fun checkAircraftTypeProposal(proposalId: Long, checkResult: CheckResult, comment: String?, user: User) {
+    fun checkAircraftTypeProposal(user: User, proposalId: Long, checkResult: CheckResult, comment: String?) {
         user.requireAuthorization(UserAuthorization.DECIDE_ON_PROPOSED_AIRCRAFT_TYPES)
 
         transaction(database.exposed) {
@@ -100,7 +100,7 @@ class AircraftTypeRepository(val database: Database, val config: Configuration.D
                 Proposal.Type.PENDING -> error("This is a bug, Type cannot be pending here. Bug 1 in AircraftTypeRepository.checkAircraftTypeProposal()")
             }
 
-            markAircraftTypeProposalAsCheckedInTransaction(proposalId, checkResult, user, comment, aircraftTypeId)
+            markAircraftTypeProposalAsCheckedInTransaction(user, proposalId, checkResult, comment, aircraftTypeId)
         }
     }
 }

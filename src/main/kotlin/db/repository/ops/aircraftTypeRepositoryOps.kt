@@ -233,9 +233,9 @@ internal fun AircraftTypeRepository.softDeleteAircraftTypeFromProposalInTransact
  */
 context(tx: JdbcTransaction)
 internal fun AircraftTypeRepository.markAircraftTypeProposalAsCheckedInTransaction(
+    user: User,
     id: Long,
     checkResult: CheckResult,
-    user: User,
     comment: String?,
     aircraftTypeId: Long? = null
 ) {

@@ -29,7 +29,7 @@ class ManufacturerRepository(val database: Database, val config: Configuration.D
      *
      * @return Matching manufacturers, or an empty list if none are found.
      */
-    fun getManufacturersByNamePrefix(prefix: String, offset: Long = 0, user: User): PagedResult<Manufacturer> =
+    fun getManufacturersByNamePrefix(user: User, prefix: String, offset: Long = 0, ): PagedResult<Manufacturer> =
         transaction(database.exposed) {
             user.requireAuthorization(UserAuthorization.DISPLAY_MANUFACTURERS)
             getManufacturersByNamePrefixInTransaction(prefix, maxMatches = config.matchesPerPage, offset = offset)
@@ -41,7 +41,7 @@ class ManufacturerRepository(val database: Database, val config: Configuration.D
      * The user mentioned in the proposal needs to be checked/inserted by the service calling this;
      * this wil store 'as is'.
      */
-    fun insertManufacturerProposal(proposal: ManufacturerProposal, user: User) =
+    fun insertManufacturerProposal(user: User, proposal: ManufacturerProposal) =
         transaction(database.exposed) {
             user.requireAuthorization(UserAuthorization.PROPOSE_MANUFACTURERS)
 
@@ -73,7 +73,7 @@ class ManufacturerRepository(val database: Database, val config: Configuration.D
      * @throws ProposalNotFoundByIdException if the proposal does not exist in the DB
      *
      */
-    fun checkManufacturerProposal(proposalId: Long, checkResult: CheckResult, comment: String?, user: User) {
+    fun checkManufacturerProposal(user: User, proposalId: Long, checkResult: CheckResult, comment: String?) {
         user.requireAuthorization(UserAuthorization.DECIDE_ON_PROPOSED_MANUFACTURERS)
 
         transaction(database.exposed) {
