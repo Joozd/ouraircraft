@@ -15,6 +15,7 @@ import org.ouraircraft.model.services.users.PasskeyService
 import org.ouraircraft.model.services.factories.LinkFactory
 import org.ouraircraft.db.repository.AuthRepository
 import org.ouraircraft.db.repository.UserRepository
+import org.ouraircraft.model.internal.Configuration
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -25,6 +26,7 @@ import kotlin.uuid.Uuid
 class YubicoPasskeyCeremoniesImplTest {
     private val crypto = TestingCryptoService()
     private val linkFactory = LinkFactory()
+    private val config = Configuration()
 
     private lateinit var fixture: TestingDatabase
 
@@ -70,7 +72,7 @@ class YubicoPasskeyCeremoniesImplTest {
     fun setUp() {
         fixture = TestingDatabase()
         authrepository = AuthRepository(fixture.database)
-        userRepository = UserRepository(fixture.database, crypto)
+        userRepository = UserRepository(fixture.database, crypto, config.userSessionConfig)
         passkeyService = PasskeyServiceImpl(authrepository, userRepository)
         rp = RelyingParty.builder()
             .identity(rpIdentity)

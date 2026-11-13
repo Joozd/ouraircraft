@@ -15,6 +15,7 @@ import org.ouraircraft.db.repository.UserRepository
 import org.ouraircraft.model.auth.PendingUserRegistration
 import org.ouraircraft.model.auth.User
 import org.ouraircraft.db.repository.ops.createUserInTransaction
+import org.ouraircraft.model.internal.Configuration
 import org.sqlite.SQLiteException
 import kotlin.io.encoding.Base64
 import kotlin.test.*
@@ -29,11 +30,12 @@ internal class UserRepositoryTest {
     private val crypto = TestingCryptoService()
     private var tokenSequence = 0
     private val verificationTokens = mutableMapOf<Uuid, EmailVerificationToken>()
+    private val config = Configuration()
 
     @BeforeTest
     fun setUp() {
         fixture = TestingDatabase()
-        repository = UserRepository(fixture.database, crypto)
+        repository = UserRepository(fixture.database, crypto, config.userSessionConfig)
         tokenSequence = 0
         verificationTokens.clear()
     }
