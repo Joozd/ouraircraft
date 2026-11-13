@@ -17,21 +17,39 @@ import org.ouraircraft.model.auth.User
 import org.ouraircraft.model.data.CheckResult
 import org.ouraircraft.model.data.Manufacturer
 import org.ouraircraft.model.data.ManufacturerProposal
+import org.ouraircraft.model.data.PagedResult
 
 /**
- * Finds manufacturers whose names start with [prefix].
+ * Finds a page of manufacturers whose names start with [prefix].
  *
  * The prefix is normalized before matching.
  *
- * @return Matching manufacturers, or an empty list if none are found.
+ * @param prefix The manufacturer name prefix to match.
+ * @param maxMatches The maximum number of results to return.
+ * @param offset The zero-based number of matching results to skip.
+ * @return A page of matching manufacturers, ordered by name ascending
+ * and ID descending, including the total number of matches before pagination.
  */
 context(tx: JdbcTransaction)
-internal fun getManufacturersByNamePrefixInTransaction(prefix: String, maxMatches: Int): List<Manufacturer> =
-    ManufacturerTable
+internal fun getManufacturersByNamePrefixInTransaction(
+    prefix: String,
+    maxMatches: Int,
+    offset: Long
+): PagedResult<Manufacturer> {
+    val query = ManufacturerTable
         .selectAll()
         .where { ManufacturerTable.name startsWith prefix }
+        .orderBy(ManufacturerTable.name to SortOrder.ASC, ManufacturerTable.id to SortOrder.DESC)
+
+    val totalCount = query.count()
+
+    val results = query
         .limit(maxMatches)
+        .offset(offset)
         .map { it.toManufacturer() }
+
+    return PagedResult(results, maxMatches, offset, totalCount)
+}
 
 
 /**
@@ -69,19 +87,34 @@ internal fun ManufacturerRepository.insertManufacturerProposalInTransaction(prop
     }
 }
 
-
 /**
- * Gets all Manufacturer proposals awaiting review.
- * @return a list of all ManufacturerProposal in database where [ManufacturerProposalTable.checkResult] is null,
- *  ordered by time of creation (oldest first)
+ * Gets a page of manufacturer proposals awaiting review.
+ *
+ * @param maxMatches The maximum number of results to return.
+ * @param offset The zero-based number of matching results to skip.
+ * @return A page of proposals where [ManufacturerProposalTable.checkResult] is null,
+ * ordered by creation time ascending and ID descending, including the total
+ * number of matches before pagination.
  */
 context(tx: JdbcTransaction)
-internal fun ManufacturerRepository.getAllOpenManufacturerProposalsInTransaction(): List<ManufacturerProposal> =
-    ManufacturerProposalTable
+internal fun ManufacturerRepository.getAllOpenManufacturerProposalsInTransaction(
+    maxMatches: Int,
+    offset: Long
+): PagedResult<ManufacturerProposal> {
+    val query = ManufacturerProposalTable
         .selectAll()
-        .where{ ManufacturerProposalTable.checkResult eq null }
-        .orderBy(ManufacturerProposalTable.createdAt to SortOrder.ASC)
+        .where { ManufacturerProposalTable.checkResult eq null }
+        .orderBy(ManufacturerProposalTable.createdAt to SortOrder.ASC, ManufacturerProposalTable.id to SortOrder.DESC)
+
+    val totalCount = query.count()
+
+    val results = query
+        .limit(maxMatches)
+        .offset(offset)
         .map { it.toManufacturerProposal() }
+
+    return PagedResult(results, maxMatches, offset, totalCount)
+}
 
 
 

@@ -11,6 +11,7 @@ import org.ouraircraft.model.auth.User
 import org.ouraircraft.model.data.AircraftType
 import org.ouraircraft.model.data.AircraftTypeProposal
 import org.ouraircraft.model.data.CheckResult
+import org.ouraircraft.model.data.PagedResult
 import org.ouraircraft.model.data.Proposal
 import org.ouraircraft.model.internal.Configuration
 
@@ -22,10 +23,10 @@ class AircraftTypeRepository(val database: Database, val config: Configuration.D
      *
      * @return Matching aircraft types, or an empty list if none are found.
      */
-    fun getAircraftTypesByFamilyPrefix(prefix: String, user: User): List<AircraftType> =
+    fun getAircraftTypesByFamilyPrefix(prefix: String, offset: Long = 0, user: User): PagedResult<AircraftType> =
         transaction(database.exposed) {
             user.requireAuthorization(UserAuthorization.DISPLAY_AIRCRAFT_TYPES)
-            getAircraftTypesByFamilyPrefixInTransaction(prefix, maxMatches = config.maxPrefixMatches)
+            getAircraftTypesByFamilyPrefixInTransaction(prefix, maxMatches = config.matchesPerPage, offset = offset)
         }
 
     /**
@@ -35,10 +36,10 @@ class AircraftTypeRepository(val database: Database, val config: Configuration.D
      *
      * @return Matching aircraft types, or an empty list if none are found.
      */
-    fun getAircraftTypesByDesignatorPrefix(prefix: String, user: User): List<AircraftType> =
+    fun getAircraftTypesByDesignatorPrefix(prefix: String, offset: Long = 0, user: User): PagedResult<AircraftType> =
         transaction(database.exposed) {
             user.requireAuthorization(UserAuthorization.DISPLAY_AIRCRAFT_TYPES)
-            getAircraftTypesByDesignatorPrefixInTransaction(prefix, config.maxPrefixMatches)
+            getAircraftTypesByDesignatorPrefixInTransaction(prefix, config.matchesPerPage, offset = offset)
         }
 
 
@@ -58,10 +59,10 @@ class AircraftTypeRepository(val database: Database, val config: Configuration.D
     /**
      * Get all currently outstanding AircraftType Proposals
      */
-    fun getAllOpenAircraftTypeProposals(user: User): List<AircraftTypeProposal> =
+    fun getOpenAircraftTypeProposals(user: User, offset: Long): PagedResult<AircraftTypeProposal> =
         transaction(database.exposed) {
             user.requireAuthorization(UserAuthorization.DISPLAY_PROPOSED_AIRCRAFT_TYPES)
-            getAllOpenAircraftTypeProposalsInTransaction()
+            getAllOpenAircraftTypeProposalsInTransaction(config.matchesPerPage, offset = offset)
         }
 
     /**

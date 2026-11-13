@@ -29,6 +29,6 @@ data class Configuration(
     )
 
     data class DataRetrievalConfig(
-        val maxPrefixMatches: Int = 20
+        val matchesPerPage: Int = 20
     )
 }

@@ -11,6 +11,7 @@ import org.ouraircraft.model.auth.User
 import org.ouraircraft.model.data.Aircraft
 import org.ouraircraft.model.data.AircraftProposal
 import org.ouraircraft.model.data.CheckResult
+import org.ouraircraft.model.data.PagedResult
 import org.ouraircraft.model.data.Proposal
 import org.ouraircraft.model.internal.Configuration
 
@@ -33,10 +34,10 @@ class AircraftRepository(val database: Database, val config: Configuration.DataR
      *
      * @return Matching aircraft, or an empty list if none are found.
      */
-    fun getAircraftByRegistrationPrefix(prefix: String, user: User): List<Aircraft> =
+    fun getAircraftByRegistrationPrefix(prefix: String, offset: Long = 0, user: User): PagedResult<Aircraft> =
         transaction(database.exposed) {
             user.requireAuthorization(UserAuthorization.DISPLAY_AIRCRAFT)
-            getAircraftByRegistrationPrefixInTransaction(prefix, maxMatches = config.maxPrefixMatches)
+            getAircraftByRegistrationPrefixInTransaction(prefix, maxMatches = config.matchesPerPage, offset = offset)
         }
 
     /**
@@ -53,10 +54,10 @@ class AircraftRepository(val database: Database, val config: Configuration.DataR
     /**
      * Get all currently outstanding Aircraft Proposals
      */
-    fun getAllOpenAircraftProposals(user: User): List<AircraftProposal> =
+    fun getOpenAircraftProposals(user: User, offset: Long): PagedResult<AircraftProposal> =
         transaction(database.exposed) {
             user.requireAuthorization(UserAuthorization.DISPLAY_PROPOSED_AIRCRAFT)
-            getAllOpenAircraftProposalsInTransaction()
+            getOpenAircraftProposalsInTransaction(config.matchesPerPage, offset)
         }
 
 

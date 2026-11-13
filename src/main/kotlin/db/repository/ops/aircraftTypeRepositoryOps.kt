@@ -17,46 +17,73 @@ import org.ouraircraft.model.auth.User
 import org.ouraircraft.model.data.AircraftType
 import org.ouraircraft.model.data.AircraftTypeProposal
 import org.ouraircraft.model.data.CheckResult
-
+import org.ouraircraft.model.data.PagedResult
 
 /**
- * Finds aircraft types whose family names start with [prefix].
+ * Finds a page of aircraft types whose family names start with [prefix].
  *
- * Depending on the database implementation, this should not be case-sensitive.
+ * Case sensitivity depends on the database implementation.
+ *
+ * @param prefix The family name prefix to match.
+ * @param maxMatches The maximum number of results to return.
+ * @param offset The zero-based number of matching results to skip.
+ * @return A page of matching aircraft types, ordered by family name ascending
+ * and ID descending, including the total number of matches before pagination.
  * @see startsWith for normalizing behavior
- *
- * @return Matching aircraft types, or an empty list if none are found.
  */
 context(tx: JdbcTransaction)
 internal fun getAircraftTypesByFamilyPrefixInTransaction(
     prefix: String,
-    maxMatches: Int
-): List<AircraftType> =
-    AircraftTypeTable
+    maxMatches: Int,
+    offset: Long
+): PagedResult<AircraftType> {
+    val query = AircraftTypeTable
         .selectAll()
         .where { AircraftTypeTable.family startsWith prefix }
+        .orderBy(AircraftTypeTable.family to SortOrder.ASC, AircraftTypeTable.id to SortOrder.DESC)
+
+    val totalCount = query.count()
+
+    val results = query
         .limit(maxMatches)
+        .offset(offset)
         .map { it.toAircraftType() }
 
+    return PagedResult(results, maxMatches, offset, totalCount)
+}
 
 /**
- * Finds aircraft types whose ICAO designator starts with [prefix].
+ * Finds a page of aircraft types whose ICAO designator starts with [prefix].
  *
- * Depending on the database implementation, this should not be case-sensitive.
+ * Case sensitivity depends on the database implementation.
+ *
+ * @param prefix The ICAO designator prefix to match.
+ * @param maxMatches The maximum number of results to return.
+ * @param offset The zero-based number of matching results to skip.
+ * @return A page of matching aircraft types, ordered by ICAO designator ascending
+ * and ID descending, including the total number of matches before pagination.
  * @see startsWith for normalizing behavior
- *
- * @return Matching aircraft types, or an empty list if none are found.
  */
 context(tx: JdbcTransaction)
 internal fun getAircraftTypesByDesignatorPrefixInTransaction(
     prefix: String,
-    maxMatches: Int
-): List<AircraftType> =
-    AircraftTypeTable
+    maxMatches: Int,
+    offset: Long
+): PagedResult<AircraftType> {
+    val query = AircraftTypeTable
         .selectAll()
         .where { AircraftTypeTable.icaoDesignator startsWith prefix }
+        .orderBy(AircraftTypeTable.icaoDesignator to SortOrder.ASC, AircraftTypeTable.id to SortOrder.DESC)
+
+    val totalCount = query.count()
+
+    val results = query
         .limit(maxMatches)
+        .offset(offset)
         .map { it.toAircraftType() }
+
+    return PagedResult(results, maxMatches, offset, totalCount)
+}
 
 
 /**
@@ -101,18 +128,30 @@ internal fun AircraftTypeRepository.insertAircraftTypeProposalInTransaction(prop
 
 
 /**
- * Gets all AircraftType proposals awaiting review.
+ * Gets a page of AircraftType proposals awaiting review.
  *
- * @return All proposals where [AircraftTypeProposalTable.checkResult] is null,
+ * @return A page of proposals where [AircraftTypeProposalTable.checkResult] is null,
  * ordered by time of creation (oldest first).
  */
 context(tx: JdbcTransaction)
-internal fun AircraftTypeRepository.getAllOpenAircraftTypeProposalsInTransaction(): List<AircraftTypeProposal> =
-    AircraftTypeProposalTable
+internal fun AircraftTypeRepository.getAllOpenAircraftTypeProposalsInTransaction(
+    maxMatches: Int,
+    offset: Long
+): PagedResult<AircraftTypeProposal> {
+    val query = AircraftTypeProposalTable
         .selectAll()
         .where { AircraftTypeProposalTable.checkResult eq null }
-        .orderBy(AircraftTypeProposalTable.createdAt to SortOrder.ASC)
+        .orderBy(AircraftTypeProposalTable.createdAt to SortOrder.ASC, AircraftTypeProposalTable.id to SortOrder.DESC)
+
+    val totalCount = query.count()
+
+    val results = query
+        .limit(maxMatches)
+        .offset(offset)
         .map { it.toAircraftTypeProposal() }
+
+    return PagedResult(results, maxMatches, offset, totalCount)
+}
 
 
 /**

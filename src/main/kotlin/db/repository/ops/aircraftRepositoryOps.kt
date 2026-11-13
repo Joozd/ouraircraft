@@ -23,6 +23,7 @@ import org.ouraircraft.model.auth.User
 import org.ouraircraft.model.data.Aircraft
 import org.ouraircraft.model.data.AircraftProposal
 import org.ouraircraft.model.data.CheckResult
+import org.ouraircraft.model.data.PagedResult
 
 /**
  * Finds an aircraft by its database ID, including its type and manufacturer.
@@ -41,22 +42,39 @@ internal fun findAircraftByIdInTransaction(id: Long): Aircraft? =
 
 
 /**
- * Finds aircraft whose registrations start with [prefix].
+ * Finds a page of aircraft whose registrations start with [prefix].
  *
- * Includes the corresponding aircraft type and manufacturer in a single query.
+ * Includes the corresponding aircraft type and manufacturer in the results query.
  * The prefix is normalized before matching.
  *
- * @return Matching aircraft, or an empty list if none are found.
+ * @param prefix The registration prefix to match.
+ * @param maxMatches The maximum number of results to return.
+ * @param offset The zero-based number of matching results to skip.
+ * @return A page of matching aircraft, ordered by registration ascending
+ * and ID descending, including the total number of matches before pagination.
  */
 context(tx: JdbcTransaction)
-internal fun getAircraftByRegistrationPrefixInTransaction(prefix: String, maxMatches: Int): List<Aircraft> =
-    AircraftTable
+internal fun getAircraftByRegistrationPrefixInTransaction(
+    prefix: String,
+    maxMatches: Int,
+    offset: Long
+): PagedResult<Aircraft> {
+    val query = AircraftTable
         .innerJoin(AircraftTypeTable)
         .innerJoin(ManufacturerTable)
         .selectAll()
         .where { AircraftTable.registration startsWith prefix }
+        .orderBy(AircraftTable.registration to SortOrder.ASC, AircraftTable.id to SortOrder.DESC)
+
+    val totalCount = query.count()
+
+    val results = query
         .limit(maxMatches)
+        .offset(offset)
         .map { it.toAircraft() }
+
+    return PagedResult(results, maxMatches, offset, totalCount)
+}
 
 
 /**
@@ -82,17 +100,33 @@ internal fun insertAircraftProposalInTransaction(proposal: AircraftProposal) {
 }
 
 /**
- * Gets all aircraft proposals awaiting review.
- * @return a list of all AircraftProposal in database where [AircraftProposalTable.checkResult] is null,
- *  ordered by time of creation (oldest first)
+ * Gets a page of aircraft proposals awaiting review.
+ *
+ * @param maxMatches The maximum number of results to return.
+ * @param offset The zero-based number of matching results to skip.
+ * @return A page of proposals where [AircraftProposalTable.checkResult] is null,
+ * ordered by creation time ascending and ID descending, including the total
+ * number of matches before pagination.
  */
 context(tx: JdbcTransaction)
-internal fun AircraftRepository.getAllOpenAircraftProposalsInTransaction(): List<AircraftProposal> =
-    AircraftProposalTable
+internal fun AircraftRepository.getOpenAircraftProposalsInTransaction(
+    maxMatches: Int,
+    offset: Long
+): PagedResult<AircraftProposal> {
+    val query = AircraftProposalTable
         .selectAll()
-        .where{ AircraftProposalTable.checkResult eq null }
-        .orderBy(AircraftProposalTable.createdAt to SortOrder.ASC)
+        .where { AircraftProposalTable.checkResult eq null }
+        .orderBy(AircraftProposalTable.createdAt to SortOrder.ASC, AircraftProposalTable.id to SortOrder.DESC)
+
+    val totalCount = query.count()
+
+    val results = query
+        .limit(maxMatches)
+        .offset(offset)
         .map { it.toAircraftProposal() }
+
+    return PagedResult(results, maxMatches, offset, totalCount)
+}
 
 
 /**

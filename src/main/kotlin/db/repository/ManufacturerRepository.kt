@@ -17,6 +17,7 @@ import org.ouraircraft.model.auth.User
 import org.ouraircraft.model.data.CheckResult
 import org.ouraircraft.model.data.Manufacturer
 import org.ouraircraft.model.data.ManufacturerProposal
+import org.ouraircraft.model.data.PagedResult
 import org.ouraircraft.model.data.Proposal
 import org.ouraircraft.model.internal.Configuration
 
@@ -28,10 +29,10 @@ class ManufacturerRepository(val database: Database, val config: Configuration.D
      *
      * @return Matching manufacturers, or an empty list if none are found.
      */
-    fun getManufacturersByNamePrefix(prefix: String, user: User): List<Manufacturer> =
+    fun getManufacturersByNamePrefix(prefix: String, offset: Long = 0, user: User): PagedResult<Manufacturer> =
         transaction(database.exposed) {
             user.requireAuthorization(UserAuthorization.DISPLAY_MANUFACTURERS)
-            getManufacturersByNamePrefixInTransaction(prefix, maxMatches = config.maxPrefixMatches)
+            getManufacturersByNamePrefixInTransaction(prefix, maxMatches = config.matchesPerPage, offset = offset)
         }
 
 
@@ -51,10 +52,10 @@ class ManufacturerRepository(val database: Database, val config: Configuration.D
     /**
      * Get all currently outstanding Manufacturer Proposals
      */
-    fun getAllOpenManufacturerProposals(user: User): List<ManufacturerProposal> =
+    fun getOpenManufacturerProposals(user: User, offset: Long): PagedResult<ManufacturerProposal> =
         transaction(database.exposed) {
             user.requireAuthorization(UserAuthorization.DISPLAY_PROPOSED_MANUFACTURERS)
-            getAllOpenManufacturerProposalsInTransaction()
+            getAllOpenManufacturerProposalsInTransaction(config.matchesPerPage, offset)
         }
 
     /**

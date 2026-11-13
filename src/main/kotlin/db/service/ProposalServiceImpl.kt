@@ -9,6 +9,7 @@ import org.ouraircraft.model.data.AircraftProposal
 import org.ouraircraft.model.data.AircraftTypeProposal
 import org.ouraircraft.model.data.CheckResult
 import org.ouraircraft.model.data.ManufacturerProposal
+import org.ouraircraft.model.data.PagedResult
 import org.ouraircraft.model.services.data.ProposalService
 import org.ouraircraft.model.services.utils.runCatchingAndMapToDomainException
 
@@ -22,10 +23,11 @@ class ProposalServiceImpl(
      * Required authorization: [UserAuthorization.DISPLAY_PROPOSED_MANUFACTURERS]
      */
     override suspend fun getOpenManufacturerProposals(
-        user: User
-    ): Result<List<ManufacturerProposal>> = runCatchingAndMapToDomainException {
+        user: User,
+        offset: Long
+    ): Result<PagedResult<ManufacturerProposal>> = runCatchingAndMapToDomainException {
         user.requireAuthorization(UserAuthorization.DISPLAY_PROPOSED_MANUFACTURERS)
-        manufacturerRepository.getAllOpenManufacturerProposals(user)
+        manufacturerRepository.getOpenManufacturerProposals(user, offset)
     }
 
     /**
@@ -33,10 +35,11 @@ class ProposalServiceImpl(
      * Required authorization: [UserAuthorization.DISPLAY_PROPOSED_AIRCRAFT_TYPES]
      */
     override suspend fun getAircraftTypeProposals(
-        user: User
-    ): Result<List<AircraftTypeProposal>> = runCatchingAndMapToDomainException {
+        user: User,
+        offset: Long
+    ): Result<PagedResult<AircraftTypeProposal>> = runCatchingAndMapToDomainException {
         user.requireAuthorization(UserAuthorization.DISPLAY_PROPOSED_AIRCRAFT_TYPES)
-        aircraftTypeRepository.getAllOpenAircraftTypeProposals(user)
+        aircraftTypeRepository.getOpenAircraftTypeProposals(user, offset)
     }
 
     /**
@@ -44,10 +47,11 @@ class ProposalServiceImpl(
      * Required authorization: [UserAuthorization.DISPLAY_PROPOSED_AIRCRAFT]
      */
     override suspend fun getAircraftProposals(
-        user: User
-    ): Result<List<AircraftProposal>> = runCatchingAndMapToDomainException {
+        user: User,
+        offset: Long
+    ): Result<PagedResult<AircraftProposal>> = runCatchingAndMapToDomainException {
         user.requireAuthorization(UserAuthorization.DISPLAY_PROPOSED_AIRCRAFT)
-        aircraftRepository.getAllOpenAircraftProposals(user)
+        aircraftRepository.getOpenAircraftProposals(user, offset)
     }
 
     /**
