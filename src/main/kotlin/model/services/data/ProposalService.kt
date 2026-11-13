@@ -6,6 +6,7 @@ import org.ouraircraft.model.data.AircraftProposal
 import org.ouraircraft.model.data.AircraftTypeProposal
 import org.ouraircraft.model.data.CheckResult
 import org.ouraircraft.model.data.ManufacturerProposal
+import org.ouraircraft.model.data.PagedResult
 
 /**
  * This service takes care of all things involving Proposals, for Manufacturers, Aircraft Types and Aircraft:
@@ -20,19 +21,19 @@ interface ProposalService {
      * Get all currently open ManufacturerProposals.
      * Required authorization: [UserAuthorization.DISPLAY_PROPOSED_MANUFACTURERS]
      */
-    suspend fun getOpenManufacturerProposals(user: User): Result<List<ManufacturerProposal>>
+    suspend fun getOpenManufacturerProposals(user: User, offset: Long = 0): Result<PagedResult<ManufacturerProposal>>
 
     /**
      * Get all currently open AircraftTypeProposal.
      * Required authorization: [UserAuthorization.DISPLAY_PROPOSED_AIRCRAFT_TYPES]
      */
-    suspend fun getAircraftTypeProposals(user: User): Result<List<AircraftTypeProposal>>
+    suspend fun getAircraftTypeProposals(user: User, offset: Long = 0): Result<PagedResult<AircraftTypeProposal>>
 
     /**
      * Get all currently open AircraftProposals.
      * Required authorization: [UserAuthorization.DISPLAY_PROPOSED_AIRCRAFT]
      */
-    suspend fun getAircraftProposals(user: User): Result<List<AircraftProposal>>
+    suspend fun getAircraftProposals(user: User, offset: Long = 0): Result<PagedResult<AircraftProposal>>
 
     /**
      * Propose a new Manufacturer.
