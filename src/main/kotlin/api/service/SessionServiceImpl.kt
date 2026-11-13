@@ -4,21 +4,19 @@ import org.ouraircraft.auth.PasskeyAddingSessionToken
 import org.ouraircraft.auth.RecoveryToken
 import org.ouraircraft.auth.UserSessionToken
 import org.ouraircraft.db.exceptions.SessionNotFoundByIdException
-import org.ouraircraft.model.services.utils.runCatchingAndMapToDomainException
+import org.ouraircraft.db.repository.SessionRepository
 import org.ouraircraft.model.auth.PasskeyData
 import org.ouraircraft.model.dto.sessions.PasskeyAddingSessionData
 import org.ouraircraft.model.dto.sessions.UserSessionData
-import org.ouraircraft.db.repository.SessionRepository
+import org.ouraircraft.model.internal.Configuration
 import org.ouraircraft.model.services.users.SessionService
+import org.ouraircraft.model.services.utils.runCatchingAndMapToDomainException
 import kotlin.time.Clock
-import kotlin.time.Duration.Companion.days
 import kotlin.time.Instant
 
-// TODO this goes to central properties
-private val USER_SESSION_EXTENSION_TTL = 30.days
-
 internal class SessionServiceImpl(
-    private val sessionRepository: SessionRepository
+    private val sessionRepository: SessionRepository,
+    private val config: Configuration.UserSessionConfig
 ): SessionService {
     /**
      * Creates a PasskeyAddingSession.
@@ -86,7 +84,7 @@ internal class SessionServiceImpl(
      */
     override suspend fun getUserSession(token: UserSessionToken, extendIfValid: Boolean): Result<UserSessionData> = runCatchingAndMapToDomainException {
         sessionRepository.getUserSession(token).let{ currentSessionData ->
-            if (extendIfValid) extendUserSession(currentSessionData, Clock.System.now() + USER_SESSION_EXTENSION_TTL).getOrThrow()
+            if (extendIfValid) extendUserSession(currentSessionData, Clock.System.now() + config.sessionTTLExtensionDuration).getOrThrow()
             else currentSessionData
         }
     }

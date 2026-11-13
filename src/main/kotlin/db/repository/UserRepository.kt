@@ -4,28 +4,16 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.ouraircraft.auth.EmailVerificationToken
 import org.ouraircraft.auth.RecoveryToken
 import org.ouraircraft.auth.exceptions.TokenMismatchException
-import org.ouraircraft.model.services.users.CryptoService
 import org.ouraircraft.db.Database
 import org.ouraircraft.db.exceptions.UserNotFoundByIDException
+import org.ouraircraft.db.repository.ops.*
 import org.ouraircraft.model.auth.PendingUserRegistration
 import org.ouraircraft.model.auth.User
+import org.ouraircraft.model.internal.Configuration
 import org.ouraircraft.model.policy.pendingRegistrationTimeout
-import org.ouraircraft.db.repository.ops.checkNameAndEmailAvailableInUserAndPending
-import org.ouraircraft.db.repository.ops.createPendingUserRegistrationInTransaction
-import org.ouraircraft.db.repository.ops.createUserFromPendingRegistration
-import org.ouraircraft.db.repository.ops.deletePendingUserRegistration
-import org.ouraircraft.db.repository.ops.findUserByEmailInTransaction
-import org.ouraircraft.db.repository.ops.findUserByScreenNameInTransaction
-import org.ouraircraft.db.repository.ops.getPendingUserFromTableByUuid
-import org.ouraircraft.db.repository.ops.getUserByIdInTransaction
-import org.ouraircraft.db.repository.ops.insertRecoveryToken
-import org.ouraircraft.db.repository.ops.isScreenNameAvailableInTransaction
+import org.ouraircraft.model.services.users.CryptoService
 import kotlin.time.Clock
-import kotlin.time.Duration.Companion.minutes
 import kotlin.uuid.Uuid
-
-//TODO make this config options
-private val RECOVERY_TOKEN_TTL = 30.minutes
 
 /**
  * Provides persistence operations for users and pending user registrations
@@ -38,7 +26,8 @@ private val RECOVERY_TOKEN_TTL = 30.minutes
  */
 internal class UserRepository(
     private val database: Database,
-    val crypto: CryptoService
+    val crypto: CryptoService,
+    val config: Configuration.UserSessionConfig
 ) {
     /**
      * Creates a pending user registration awaiting email verification.
@@ -161,7 +150,7 @@ internal class UserRepository(
         val user = getUserByIdInTransaction(userId) // make sure user exists
         val recoveryToken = RecoveryToken.generate()
         val recoveryTokenHash = crypto.hashToken(recoveryToken)
-        val expiresAt = Clock.System.now() + RECOVERY_TOKEN_TTL
+        val expiresAt = Clock.System.now() + config.recoveryTokenTTl
         insertRecoveryToken(user.id, recoveryTokenHash, expiresAt)
 
         recoveryToken

@@ -1,4 +1,4 @@
-package org.ouraircraft
+package org.ouraircraft.model.internal
 
 class CliArgs(args: Array<String>) {
     private val normalizedArgs = args.map { normalizeArg(it) }
@@ -7,6 +7,11 @@ class CliArgs(args: Array<String>) {
     val configFileLocation: String? = getArg(CONFIG_FILE)
     val hostName = getArg(HOSTNAME)
 
+    fun toConfiguration(): Configuration = Configuration(
+        inMemoryDb = inMemoryDb,
+        configFileLocation = configFileLocation,
+        hostName = hostName,
+    )
 
 
     override fun toString() = "CliArgs(inMemoryDb = $inMemoryDb, configFileLocation = $configFileLocation)"

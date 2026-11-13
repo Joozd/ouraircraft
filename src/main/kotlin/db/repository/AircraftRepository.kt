@@ -12,6 +12,7 @@ import org.ouraircraft.model.data.Aircraft
 import org.ouraircraft.model.data.AircraftProposal
 import org.ouraircraft.model.data.CheckResult
 import org.ouraircraft.model.data.Proposal
+import org.ouraircraft.model.internal.Configuration
 
 /**
  * Provides access to aircraft records in the database.
@@ -23,7 +24,7 @@ import org.ouraircraft.model.data.Proposal
  *
  * @property database Database used for repository operations.
  */
-class AircraftRepository(val database: Database) {
+class AircraftRepository(val database: Database, val config: Configuration.DataRetrievalConfig) {
 
     /**
      * Finds aircraft whose registrations start with [prefix].
@@ -35,7 +36,7 @@ class AircraftRepository(val database: Database) {
     fun getAircraftByRegistrationPrefix(prefix: String, user: User): List<Aircraft> =
         transaction(database.exposed) {
             user.requireAuthorization(UserAuthorization.DISPLAY_AIRCRAFT)
-            getAircraftByRegistrationPrefixInTransaction(prefix)
+            getAircraftByRegistrationPrefixInTransaction(prefix, maxMatches = config.maxPrefixMatches)
         }
 
     /**

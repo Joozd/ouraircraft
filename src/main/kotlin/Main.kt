@@ -2,6 +2,8 @@ package org.ouraircraft
 
 import org.ouraircraft.api.ApiServer
 import org.ouraircraft.db.createInMemoryDB
+import org.ouraircraft.model.internal.CliArgs
+import org.ouraircraft.model.internal.Configuration
 import org.ouraircraft.model.services.users.CryptoService
 import org.ouraircraft.model.services.ServiceProvider
 
@@ -17,18 +19,16 @@ fun main(args: Array<String>) {
 //
 //    val config = getConfigFromFile(configFile)
 
-    val serviceProvider = buildServiceProvider(args)
+    val serviceProvider = buildServiceProvider(args.toConfiguration())
 
     ApiServer(serviceProvider).start()
 }
 
-
-//TODO get fallback settings from config
-private fun buildServiceProvider(args: CliArgs): ServiceProvider{
-    if(args.inMemoryDb){
+private fun buildServiceProvider(configuration: Configuration): ServiceProvider{
+    if(configuration.inMemoryDb){
         val cryptoService = CryptoService.dummy()
         val database = createInMemoryDB()
-        return ServiceProvider(cryptoService, database, args)
+        return ServiceProvider(cryptoService, database, configuration)
     }
     else TODO("Create production ServiceProvider")
 }

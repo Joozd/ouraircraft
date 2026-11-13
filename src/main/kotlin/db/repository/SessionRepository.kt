@@ -7,31 +7,18 @@ import org.ouraircraft.auth.UserSessionToken
 import org.ouraircraft.auth.exceptions.TokenNotFoundException
 import org.ouraircraft.db.Database
 import org.ouraircraft.db.exceptions.SessionNotFoundByIdException
+import org.ouraircraft.db.repository.ops.*
 import org.ouraircraft.model.dto.sessions.PasskeyAddingSessionData
 import org.ouraircraft.model.dto.sessions.UserSessionData
+import org.ouraircraft.model.internal.Configuration
 import org.ouraircraft.model.services.users.CryptoService
-import org.ouraircraft.db.repository.ops.extendUserSessionInTransaction
-import org.ouraircraft.db.repository.ops.getPasskeyAddingSessionDataFromToken
-import org.ouraircraft.db.repository.ops.getUserFromRecoveryToken
-import org.ouraircraft.db.repository.ops.getUserSessionDataFromToken
-import org.ouraircraft.db.repository.ops.insertPasskeyAddingSession
-import org.ouraircraft.db.repository.ops.insertUserSession
-import org.ouraircraft.db.repository.ops.invalidatePasskeyAddingSessionInTransaction
-import org.ouraircraft.db.repository.ops.invalidateRecoveryToken
-import org.ouraircraft.db.repository.ops.invalidateUserSessionInTransaction
 import kotlin.time.Clock
-import kotlin.time.Duration.Companion.days
-import kotlin.time.Duration.Companion.minutes
 import kotlin.uuid.Uuid
-
-//TODO make these properties injected
-private val PASSKEY_SESSION_TTL = 30.minutes
-private val USER_SESSION_TTL = 30.days
-private val MAX_EXTENDED_SESSION_TTL = 365.days * 1000 // 1000 years means no practical max extension for now
 
 class SessionRepository(
     private val database: Database,
-    val crypto: CryptoService
+    val crypto: CryptoService,
+    private val config: Configuration.UserSessionConfig
 ) {
     /**
      * Create a new PasskeyAddingSession for the user identified by [recoveryToken].
@@ -47,7 +34,7 @@ class SessionRepository(
         val sessionData = transaction(database.exposed) {
             val userId = getUserFromRecoveryToken(recoveryToken)
 
-            insertPasskeyAddingSession(userId, sessionToken, PASSKEY_SESSION_TTL).also{
+            insertPasskeyAddingSession(userId, sessionToken, config.passkeySessionTTL).also{
                 invalidateRecoveryToken(recoveryToken)
             }
 
@@ -81,8 +68,8 @@ class SessionRepository(
                 sessionId = -1,
                 userId = userId,
                 createdAt = now,
-                expiresAt = now + USER_SESSION_TTL,
-                maxExtendedExpiresAt = now + MAX_EXTENDED_SESSION_TTL
+                expiresAt = now + config.userSessionTTL,
+                maxExtendedExpiresAt = now + config.maxExtendedSessionTTL
             ).also{ sessionData ->
                 insertUserSession(sessionData, sessionToken)
             }

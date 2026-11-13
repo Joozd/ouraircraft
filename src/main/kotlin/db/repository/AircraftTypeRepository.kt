@@ -12,8 +12,9 @@ import org.ouraircraft.model.data.AircraftType
 import org.ouraircraft.model.data.AircraftTypeProposal
 import org.ouraircraft.model.data.CheckResult
 import org.ouraircraft.model.data.Proposal
+import org.ouraircraft.model.internal.Configuration
 
-class AircraftTypeRepository(val database: Database) {
+class AircraftTypeRepository(val database: Database, val config: Configuration.DataRetrievalConfig) {
     /**
      * Finds aircraft types whose names start with [prefix].
      *
@@ -24,7 +25,7 @@ class AircraftTypeRepository(val database: Database) {
     fun getAircraftTypesByFamilyPrefix(prefix: String, user: User): List<AircraftType> =
         transaction(database.exposed) {
             user.requireAuthorization(UserAuthorization.DISPLAY_AIRCRAFT_TYPES)
-            getAircraftTypesByFamilyPrefixInTransaction(prefix)
+            getAircraftTypesByFamilyPrefixInTransaction(prefix, maxMatches = config.maxPrefixMatches)
         }
 
     /**
@@ -37,7 +38,7 @@ class AircraftTypeRepository(val database: Database) {
     fun getAircraftTypesByDesignatorPrefix(prefix: String, user: User): List<AircraftType> =
         transaction(database.exposed) {
             user.requireAuthorization(UserAuthorization.DISPLAY_AIRCRAFT_TYPES)
-            getAircraftTypesByDesignatorPrefixInTransaction(prefix)
+            getAircraftTypesByDesignatorPrefixInTransaction(prefix, config.maxPrefixMatches)
         }
 
 

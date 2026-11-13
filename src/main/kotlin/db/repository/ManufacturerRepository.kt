@@ -18,8 +18,9 @@ import org.ouraircraft.model.data.CheckResult
 import org.ouraircraft.model.data.Manufacturer
 import org.ouraircraft.model.data.ManufacturerProposal
 import org.ouraircraft.model.data.Proposal
+import org.ouraircraft.model.internal.Configuration
 
-class ManufacturerRepository(val database: Database) {
+class ManufacturerRepository(val database: Database, val config: Configuration.DataRetrievalConfig) {
     /**
      * Finds manufacturers whose names start with [prefix].
      *
@@ -30,7 +31,7 @@ class ManufacturerRepository(val database: Database) {
     fun getManufacturersByNamePrefix(prefix: String, user: User): List<Manufacturer> =
         transaction(database.exposed) {
             user.requireAuthorization(UserAuthorization.DISPLAY_MANUFACTURERS)
-            getManufacturersByNamePrefixInTransaction(prefix)
+            getManufacturersByNamePrefixInTransaction(prefix, maxMatches = config.maxPrefixMatches)
         }
 
 

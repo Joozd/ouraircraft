@@ -18,9 +18,6 @@ import org.ouraircraft.model.data.CheckResult
 import org.ouraircraft.model.data.Manufacturer
 import org.ouraircraft.model.data.ManufacturerProposal
 
-// TODO move to settings
-private const val MAX_PREFIX_MATCHES = 20
-
 /**
  * Finds manufacturers whose names start with [prefix].
  *
@@ -29,7 +26,7 @@ private const val MAX_PREFIX_MATCHES = 20
  * @return Matching manufacturers, or an empty list if none are found.
  */
 context(tx: JdbcTransaction)
-internal fun getManufacturersByNamePrefixInTransaction(prefix: String, maxMatches: Int = MAX_PREFIX_MATCHES): List<Manufacturer> =
+internal fun getManufacturersByNamePrefixInTransaction(prefix: String, maxMatches: Int): List<Manufacturer> =
     ManufacturerTable
         .selectAll()
         .where { ManufacturerTable.name startsWith prefix }

@@ -24,9 +24,6 @@ import org.ouraircraft.model.data.Aircraft
 import org.ouraircraft.model.data.AircraftProposal
 import org.ouraircraft.model.data.CheckResult
 
-// TODO move to settings
-private const val MAX_PREFIX_MATCHES = 20
-
 /**
  * Finds an aircraft by its database ID, including its type and manufacturer.
  *
@@ -52,7 +49,7 @@ internal fun findAircraftByIdInTransaction(id: Long): Aircraft? =
  * @return Matching aircraft, or an empty list if none are found.
  */
 context(tx: JdbcTransaction)
-internal fun getAircraftByRegistrationPrefixInTransaction(prefix: String, maxMatches: Int = MAX_PREFIX_MATCHES): List<Aircraft> =
+internal fun getAircraftByRegistrationPrefixInTransaction(prefix: String, maxMatches: Int): List<Aircraft> =
     AircraftTable
         .innerJoin(AircraftTypeTable)
         .innerJoin(ManufacturerTable)

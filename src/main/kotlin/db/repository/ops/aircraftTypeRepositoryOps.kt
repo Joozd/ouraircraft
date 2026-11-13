@@ -18,8 +18,6 @@ import org.ouraircraft.model.data.AircraftType
 import org.ouraircraft.model.data.AircraftTypeProposal
 import org.ouraircraft.model.data.CheckResult
 
-// TODO move to settings
-private const val MAX_PREFIX_MATCHES = 20
 
 /**
  * Finds aircraft types whose family names start with [prefix].
@@ -32,7 +30,7 @@ private const val MAX_PREFIX_MATCHES = 20
 context(tx: JdbcTransaction)
 internal fun getAircraftTypesByFamilyPrefixInTransaction(
     prefix: String,
-    maxMatches: Int = MAX_PREFIX_MATCHES
+    maxMatches: Int
 ): List<AircraftType> =
     AircraftTypeTable
         .selectAll()
@@ -52,7 +50,7 @@ internal fun getAircraftTypesByFamilyPrefixInTransaction(
 context(tx: JdbcTransaction)
 internal fun getAircraftTypesByDesignatorPrefixInTransaction(
     prefix: String,
-    maxMatches: Int = MAX_PREFIX_MATCHES
+    maxMatches: Int
 ): List<AircraftType> =
     AircraftTypeTable
         .selectAll()
