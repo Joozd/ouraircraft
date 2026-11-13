@@ -13,14 +13,14 @@ import org.ouraircraft.model.data.ManufacturerProposal
  *  - Creating a new proposal
  *  - Checking a proposal and elevating it to live data
  *
- *  This service is responsible for checking user authorizations.
+ * This service is responsible for checking user authorizations.
  */
 interface ProposalService {
     /**
      * Get all currently open ManufacturerProposals.
      * Required authorization: [UserAuthorization.DISPLAY_PROPOSED_MANUFACTURERS]
      */
-    suspend fun getManufacturerProposals(user: User): Result<List<ManufacturerProposal>>
+    suspend fun getOpenManufacturerProposals(user: User): Result<List<ManufacturerProposal>>
 
     /**
      * Get all currently open AircraftTypeProposal.
@@ -36,13 +36,13 @@ interface ProposalService {
 
     /**
      * Propose a new Manufacturer.
-     * Required authorization: [UserAuthorization.PROPOSE_MANUFACTURER]
+     * Required authorization: [UserAuthorization.PROPOSE_MANUFACTURERS]
      */
     suspend fun proposeManufacturer(proposedManufacturer: ManufacturerProposal, user: User): Result<Unit>
 
     /**
      * Propose a new Aircraft Type
-     * Required authorization: [UserAuthorization.PROPOSE_AIRCRAFT_TYPE]
+     * Required authorization: [UserAuthorization.PROPOSE_AIRCRAFT_TYPES]
      */
     suspend fun proposeAircraftType(proposedAircraftType: AircraftTypeProposal, user: User): Result<Unit>
 
@@ -54,7 +54,7 @@ interface ProposalService {
 
     /**
      * Handle the result of checking a proposed Manufacturer.
-     * Required authorization: [UserAuthorization.DECIDE_ON_PROPOSED_MANUFACTURER]
+     * Required authorization: [UserAuthorization.DECIDE_ON_PROPOSED_MANUFACTURERS]
      */
     suspend fun handleManufactureProposalCheck(
         checkedProposalId: Long,
@@ -65,7 +65,7 @@ interface ProposalService {
 
     /**
      * Handle the result of checking a proposed Aircraft Type.
-     * Required authorization: [UserAuthorization.DECIDE_ON_PROPOSED_AIRCRAFT_TYPE]
+     * Required authorization: [UserAuthorization.DECIDE_ON_PROPOSED_AIRCRAFT_TYPES]
      */
     suspend fun handleAircraftTypeProposalCheck(
         checkedProposalId: Long,

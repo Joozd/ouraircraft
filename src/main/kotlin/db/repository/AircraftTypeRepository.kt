@@ -23,7 +23,7 @@ class AircraftTypeRepository(val database: Database) {
      */
     fun getAircraftTypesByFamilyPrefix(prefix: String, user: User): List<AircraftType> =
         transaction(database.exposed) {
-            user.requireAuthorization(UserAuthorization.DISPLAY_AIRCRAFT_TYPE)
+            user.requireAuthorization(UserAuthorization.DISPLAY_AIRCRAFT_TYPES)
             getAircraftTypesByFamilyPrefixInTransaction(prefix)
         }
 
@@ -36,7 +36,7 @@ class AircraftTypeRepository(val database: Database) {
      */
     fun getAircraftTypesByDesignatorPrefix(prefix: String, user: User): List<AircraftType> =
         transaction(database.exposed) {
-            user.requireAuthorization(UserAuthorization.DISPLAY_AIRCRAFT_TYPE)
+            user.requireAuthorization(UserAuthorization.DISPLAY_AIRCRAFT_TYPES)
             getAircraftTypesByDesignatorPrefixInTransaction(prefix)
         }
 
@@ -48,7 +48,7 @@ class AircraftTypeRepository(val database: Database) {
      */
     fun insertAircraftTypeProposal(proposal: AircraftTypeProposal, user: User) =
         transaction(database.exposed) {
-            user.requireAuthorization(UserAuthorization.PROPOSE_AIRCRAFT_TYPE)
+            user.requireAuthorization(UserAuthorization.PROPOSE_AIRCRAFT_TYPES)
 
             insertAircraftTypeProposalInTransaction(proposal)
         }
@@ -80,7 +80,7 @@ class AircraftTypeRepository(val database: Database) {
      * @throws TargetItemForProposalNotFoundByIdException if the aircraft type to update or soft-delete does not exist.
      */
     fun checkAircraftTypeProposal(proposalId: Long, checkResult: CheckResult, comment: String?, user: User) {
-        user.requireAuthorization(UserAuthorization.DECIDE_ON_PROPOSED_AIRCRAFT_TYPE)
+        user.requireAuthorization(UserAuthorization.DECIDE_ON_PROPOSED_AIRCRAFT_TYPES)
 
         transaction(database.exposed) {
             // check if this proposal (still) needs to be checked

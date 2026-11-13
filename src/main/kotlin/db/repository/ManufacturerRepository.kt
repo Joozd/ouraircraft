@@ -29,7 +29,7 @@ class ManufacturerRepository(val database: Database) {
      */
     fun getManufacturersByNamePrefix(prefix: String, user: User): List<Manufacturer> =
         transaction(database.exposed) {
-            user.requireAuthorization(UserAuthorization.DISPLAY_MANUFACTURER)
+            user.requireAuthorization(UserAuthorization.DISPLAY_MANUFACTURERS)
             getManufacturersByNamePrefixInTransaction(prefix)
         }
 
@@ -41,7 +41,7 @@ class ManufacturerRepository(val database: Database) {
      */
     fun insertManufacturerProposal(proposal: ManufacturerProposal, user: User) =
         transaction(database.exposed) {
-            user.requireAuthorization(UserAuthorization.PROPOSE_MANUFACTURER)
+            user.requireAuthorization(UserAuthorization.PROPOSE_MANUFACTURERS)
 
             insertManufacturerProposalInTransaction(proposal)
         }
@@ -72,7 +72,7 @@ class ManufacturerRepository(val database: Database) {
      *
      */
     fun checkManufacturerProposal(proposalId: Long, checkResult: CheckResult, comment: String?, user: User) {
-        user.requireAuthorization(UserAuthorization.DECIDE_ON_PROPOSED_MANUFACTURER)
+        user.requireAuthorization(UserAuthorization.DECIDE_ON_PROPOSED_MANUFACTURERS)
 
         transaction(database.exposed) {
             // check if this proposal (still) needs to be checked
