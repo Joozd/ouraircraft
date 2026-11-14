@@ -1,6 +1,8 @@
 package org.ouraircraft.model.data
 
+import org.ouraircraft.model.auth.User
 import org.ouraircraft.model.data.valueclasses.AircraftRegistration
+import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
@@ -32,8 +34,6 @@ data class AircraftProposal(
     override val targetId: Long?,
     override val resultId: Long?,
     override val authorId: Uuid,
-    val aircraftTypeId: Long,
-    val registration: AircraftRegistration,
     override val delete: Boolean,
     override val proposalComment: String?,
     override val createdAt: Instant,
@@ -41,7 +41,31 @@ data class AircraftProposal(
     override val checkResult: CheckResult?,
     override val checkResultComment: String?,
     override val checkedAt: Instant?,
+    val aircraftTypeId: Long,
+    val registration: AircraftRegistration,
 ): Proposal {
+    constructor(
+        user: User,
+        targetId: Long?,
+        delete: Boolean,
+        proposalComment: String?,
+        aircraftTypeId: Long,
+        registration: AircraftRegistration
+    ): this(
+        id = -1,
+        targetId = targetId,
+        resultId = null,
+        authorId = user.id,
+        delete = delete,
+        proposalComment = proposalComment,
+        createdAt = Clock.System.now(),
+        checkedBy = null,
+        checkResult = null,
+        checkResultComment = null,
+        checkedAt = null,
+        aircraftTypeId = aircraftTypeId,
+        registration = registration
+    )
     init{
         checkSanity()
     }

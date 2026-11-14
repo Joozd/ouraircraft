@@ -1,10 +1,14 @@
 package org.ouraircraft.model.data
 
+import org.ouraircraft.model.auth.User
+import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
 /**
  * Represents a proposal to create, modify, or delete an aircraft type.
+ *
+ * To create a new proposal, use the secondary constructor
  *
  * Contains a complete snapshot of the proposed aircraft type data.
  * Once created, proposal data is immutable. Review fields may be populated
@@ -51,6 +55,38 @@ data class AircraftTypeProposal(
     override val checkResult: CheckResult?,
     override val checkedAt: Instant?,
 ): Proposal {
+    constructor(
+        user: User,
+        targetId: Long?,
+        delete: Boolean,
+        proposalComment: String?,
+        manufacturerId: Long,
+        family: String,
+        variant: String,
+        icaoDesignator: String,
+        engineCount: Int,
+        engineType: String,
+        wakeCategory: String,
+    ): this(
+        id  = -1,
+        targetId = targetId,
+        resultId = null,
+        authorId = user.id,
+        delete = delete,
+        proposalComment = proposalComment,
+        createdAt = Clock.System.now(),
+        checkedBy = null,
+        checkResult = null,
+        checkResultComment = null,
+        checkedAt = null,
+        manufacturerId =manufacturerId,
+        family= family,
+        variant = variant,
+        icaoDesignator = icaoDesignator,
+        engineCount = engineCount,
+        engineType = engineType,
+        wakeCategory = wakeCategory
+    )
     init{
         checkSanity()
     }

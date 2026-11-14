@@ -1,10 +1,14 @@
 package org.ouraircraft.model.data
 
+import org.ouraircraft.model.auth.User
+import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
 /**
  * Represents a proposal to create, modify, or delete a manufacturer.
+ *
+ * To create a new proposal, use the secondary constructor
  *
  * Contains a complete snapshot of the proposed manufacturer data.
  * Once created, proposal data is immutable. Review fields may be populated
@@ -27,7 +31,7 @@ import kotlin.uuid.Uuid
  * @property checkedAt Timestamp when the proposal was reviewed, or null if pending.
  */
 data class ManufacturerProposal(
-    override val id: Long = -1,
+    override val id: Long,
     override val targetId: Long?,
     override val resultId: Long?,
     override val authorId: Uuid,
@@ -42,6 +46,29 @@ data class ManufacturerProposal(
     val name: String,
     val longName: String?,
 ): Proposal {
+    constructor(
+        user: User,
+        targetId: Long?,
+        delete: Boolean,
+        proposalComment: String?,
+        name: String,
+        longName: String?
+    ): this(
+        id = -1,
+        targetId = targetId,
+        resultId = null,
+        authorId = user.id,
+        delete = delete,
+        proposalComment = proposalComment,
+        createdAt = Clock.System.now(),
+        checkedBy = null,
+        checkResult = null,
+        checkResultComment = null,
+        checkedAt = null,
+        name = name,
+        longName = longName
+    )
+
     init{
         checkSanity()
     }
