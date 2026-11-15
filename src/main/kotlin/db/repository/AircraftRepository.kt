@@ -37,7 +37,7 @@ class AircraftRepository(val database: Database, val config: Configuration.DataR
     fun getAircraftByRegistrationPrefix(user: User, prefix: String, offset: Long = 0): PagedResult<Aircraft> =
         transaction(database.exposed) {
             user.requireAuthorization(UserAuthorization.DISPLAY_AIRCRAFT)
-            getAircraftByRegistrationPrefixInTransaction(prefix, maxMatches = config.matchesPerPage, offset = offset)
+            getAircraftByRegistrationPrefixInTransaction(prefix, maxMatches = config.maxMatchesPerPage, offset = offset)
         }
 
     /**
@@ -54,10 +54,11 @@ class AircraftRepository(val database: Database, val config: Configuration.DataR
     /**
      * Get all currently outstanding Aircraft Proposals
      */
-    fun getOpenAircraftProposals(user: User, offset: Long): PagedResult<AircraftProposal> =
+    fun getOpenAircraftProposals(user: User, limit: Int, offset: Long): PagedResult<AircraftProposal> =
         transaction(database.exposed) {
-            user.requireAuthorization(UserAuthorization.DISPLAY_PROPOSED_AIRCRAFT)
-            getOpenAircraftProposalsInTransaction(config.matchesPerPage, offset)
+            user.requireAuthorization(UserAuthorization.DISPLAY_OPEN_PROPOSALS)
+            val maxMatches = minOf(limit, config.maxMatchesPerPage)
+            getOpenAircraftProposalsInTransaction(maxMatches, offset)
         }
 
 

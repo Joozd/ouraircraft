@@ -32,10 +32,10 @@ class ServiceProvider(
     private val aircraftTypeRepository = AircraftTypeRepository(database, configuration.dataRetrievalConfig)
     private val aircraftRepository = AircraftRepository(database, configuration.dataRetrievalConfig)
 
-    private val linkFactory = LinkFactory(configuration.hostName!!)
+    private val linkFactory = LinkFactory(configuration.hostName)
 
-    val userManagementService: UserManagementService = UserManagementServiceImpl(userRepository, linkFactory)
     val sessionService: SessionService = SessionServiceImpl(sessionRepository, configuration.userSessionConfig)
+    val userManagementService: UserManagementService = UserManagementServiceImpl(userRepository, linkFactory, sessionService)
     val passkeyCeremonies: PasskeyCeremonies = YubicoPasskeyCeremoniesImpl(createRelyingParty(configuration, passkeyService), userManagementService, passkeyService)
 
     val dataRetrievalService: DataRetrievalService = DataRetrievalServiceImpl(manufacturerRepository, aircraftTypeRepository, aircraftRepository)

@@ -20,38 +20,41 @@ class ProposalServiceImpl(
 ) : ProposalService {
     /**
      * Get all currently open ManufacturerProposals.
-     * Required authorization: [UserAuthorization.DISPLAY_PROPOSED_MANUFACTURERS]
+     * Required authorization: [UserAuthorization.DISPLAY_OPEN_PROPOSALS]
      */
     override suspend fun getOpenManufacturerProposals(
         user: User,
+        limit: Int,
         offset: Long
     ): Result<PagedResult<ManufacturerProposal>> = runCatchingAndMapToDomainException {
-        user.requireAuthorization(UserAuthorization.DISPLAY_PROPOSED_MANUFACTURERS)
-        manufacturerRepository.getOpenManufacturerProposals(user, offset)
+        user.requireAuthorization(UserAuthorization.DISPLAY_OPEN_PROPOSALS)
+        manufacturerRepository.getOpenManufacturerProposals(user, limit, offset)
     }
 
     /**
      * Get all currently open AircraftTypeProposal.
-     * Required authorization: [UserAuthorization.DISPLAY_PROPOSED_AIRCRAFT_TYPES]
+     * Required authorization: [UserAuthorization.DISPLAY_OPEN_PROPOSALS]
      */
     override suspend fun getOpenAircraftTypeProposals(
         user: User,
+        limit: Int,
         offset: Long
     ): Result<PagedResult<AircraftTypeProposal>> = runCatchingAndMapToDomainException {
-        user.requireAuthorization(UserAuthorization.DISPLAY_PROPOSED_AIRCRAFT_TYPES)
-        aircraftTypeRepository.getOpenAircraftTypeProposals(user, offset)
+        user.requireAuthorization(UserAuthorization.DISPLAY_OPEN_PROPOSALS)
+        aircraftTypeRepository.getOpenAircraftTypeProposals(user, limit, offset)
     }
 
     /**
      * Get all currently open AircraftProposals.
-     * Required authorization: [UserAuthorization.DISPLAY_PROPOSED_AIRCRAFT]
+     * Required authorization: [UserAuthorization.DISPLAY_OPEN_PROPOSALS]
      */
     override suspend fun getOpenAircraftProposals(
         user: User,
+        limit: Int,
         offset: Long
     ): Result<PagedResult<AircraftProposal>> = runCatchingAndMapToDomainException {
-        user.requireAuthorization(UserAuthorization.DISPLAY_PROPOSED_AIRCRAFT)
-        aircraftRepository.getOpenAircraftProposals(user, offset)
+        user.requireAuthorization(UserAuthorization.DISPLAY_OPEN_PROPOSALS)
+        aircraftRepository.getOpenAircraftProposals(user, limit, offset)
     }
 
     /**

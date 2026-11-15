@@ -26,7 +26,7 @@ class AircraftTypeRepository(val database: Database, val config: Configuration.D
     fun getAircraftTypesByFamilyPrefix(user: User, prefix: String, offset: Long = 0): PagedResult<AircraftType> =
         transaction(database.exposed) {
             user.requireAuthorization(UserAuthorization.DISPLAY_AIRCRAFT_TYPES)
-            getAircraftTypesByFamilyPrefixInTransaction(prefix, maxMatches = config.matchesPerPage, offset = offset)
+            getAircraftTypesByFamilyPrefixInTransaction(prefix, maxMatches = config.maxMatchesPerPage, offset = offset)
         }
 
     /**
@@ -39,7 +39,7 @@ class AircraftTypeRepository(val database: Database, val config: Configuration.D
     fun getAircraftTypesByDesignatorPrefix(user: User, prefix: String, offset: Long = 0): PagedResult<AircraftType> =
         transaction(database.exposed) {
             user.requireAuthorization(UserAuthorization.DISPLAY_AIRCRAFT_TYPES)
-            getAircraftTypesByDesignatorPrefixInTransaction(prefix, config.matchesPerPage, offset = offset)
+            getAircraftTypesByDesignatorPrefixInTransaction(prefix, config.maxMatchesPerPage, offset = offset)
         }
 
 
@@ -59,10 +59,11 @@ class AircraftTypeRepository(val database: Database, val config: Configuration.D
     /**
      * Get all currently outstanding AircraftType Proposals
      */
-    fun getOpenAircraftTypeProposals(user: User, offset: Long): PagedResult<AircraftTypeProposal> =
+    fun getOpenAircraftTypeProposals(user: User, limit: Int, offset: Long): PagedResult<AircraftTypeProposal> =
         transaction(database.exposed) {
-            user.requireAuthorization(UserAuthorization.DISPLAY_PROPOSED_AIRCRAFT_TYPES)
-            getAllOpenAircraftTypeProposalsInTransaction(config.matchesPerPage, offset = offset)
+            user.requireAuthorization(UserAuthorization.DISPLAY_OPEN_PROPOSALS)
+            val maxMatches = minOf(limit, config.maxMatchesPerPage)
+            getAllOpenAircraftTypeProposalsInTransaction(maxMatches, offset = offset)
         }
 
     /**

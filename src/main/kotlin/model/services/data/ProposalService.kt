@@ -19,21 +19,30 @@ import org.ouraircraft.model.data.PagedResult
 interface ProposalService {
     /**
      * Get all currently open ManufacturerProposals.
-     * Required authorization: [UserAuthorization.DISPLAY_PROPOSED_MANUFACTURERS]
+     * @param user The user who wants this
+     * @param offset The offset used for paging
+     * @param limit The number of results on this page. Can be maximized by global configuration so not guaranteed.
+     * Required authorization: [UserAuthorization.DISPLAY_OPEN_PROPOSALS]
      */
-    suspend fun getOpenManufacturerProposals(user: User, offset: Long = 0): Result<PagedResult<ManufacturerProposal>>
+    suspend fun getOpenManufacturerProposals(user: User, limit: Int, offset: Long = 0): Result<PagedResult<ManufacturerProposal>>
 
     /**
      * Get all currently open AircraftTypeProposal.
-     * Required authorization: [UserAuthorization.DISPLAY_PROPOSED_AIRCRAFT_TYPES]
+     * @param user The user who wants this
+     * @param offset The offset used for paging
+     * @param limit The number of results on this page. Can be maximized by global configuration so not guaranteed.
+     * Required authorization: [UserAuthorization.DISPLAY_OPEN_PROPOSALS]
      */
-    suspend fun getOpenAircraftTypeProposals(user: User, offset: Long = 0): Result<PagedResult<AircraftTypeProposal>>
+    suspend fun getOpenAircraftTypeProposals(user: User, limit: Int, offset: Long = 0): Result<PagedResult<AircraftTypeProposal>>
 
     /**
      * Get all currently open AircraftProposals.
-     * Required authorization: [UserAuthorization.DISPLAY_PROPOSED_AIRCRAFT]
+     * @param user The user who wants this
+     * @param offset The offset used for paging
+     * @param limit The number of results on this page. Can be maximized by global configuration so not guaranteed.
+     * Required authorization: [UserAuthorization.DISPLAY_OPEN_PROPOSALS]
      */
-    suspend fun getOpenAircraftProposals(user: User, offset: Long = 0): Result<PagedResult<AircraftProposal>>
+    suspend fun getOpenAircraftProposals(user: User, limit: Int, offset: Long = 0): Result<PagedResult<AircraftProposal>>
 
     /**
      * Propose a new Manufacturer.

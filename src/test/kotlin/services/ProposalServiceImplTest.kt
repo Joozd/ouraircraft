@@ -28,10 +28,12 @@ import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
+private const val CONFIG_LIMIT_MATCHES_PER_PAGE = 5
+
 class ProposalServiceImplTest {
     private lateinit var fixture: TestingDatabase
     private lateinit var proposalService: ProposalService
-    private val config = Configuration().dataRetrievalConfig
+    private val config = Configuration().dataRetrievalConfig.copy(maxMatchesPerPage = CONFIG_LIMIT_MATCHES_PER_PAGE)
 
     private lateinit var manufacturerRepository: ManufacturerRepository
     private lateinit var aircraftTypeRepository: AircraftTypeRepository
@@ -60,7 +62,7 @@ class ProposalServiceImplTest {
         val proposal = manufacturerProposal(user)
         runBlocking{
             assertTrue(proposalService.proposeManufacturer(user, proposal).isSuccess)
-            val foundProposals = proposalService.getOpenManufacturerProposals(userAllAuthorizations).getOrThrow()
+            val foundProposals = proposalService.getOpenManufacturerProposals(userAllAuthorizations, limit = 10).getOrThrow()
             assertEquals(1, foundProposals.results.size)
             val foundProposal = foundProposals.results.first()
             assertEquals(foundProposal.authorId, proposal.authorId) // very rough round-trip check.
@@ -84,7 +86,7 @@ class ProposalServiceImplTest {
         val proposal = aircraftTypeProposal(user)
         runBlocking {
             assertTrue(proposalService.proposeAircraftType(user, proposal).isSuccess)
-            val foundProposals = proposalService.getOpenAircraftTypeProposals(userAllAuthorizations).getOrThrow()
+            val foundProposals = proposalService.getOpenAircraftTypeProposals(userAllAuthorizations, limit = 10).getOrThrow()
             assertEquals(1, foundProposals.results.size)
             val foundProposal = foundProposals.results.first()
             assertEquals(foundProposal.authorId, proposal.authorId) // very rough round-trip check.
@@ -109,7 +111,7 @@ class ProposalServiceImplTest {
         val proposal = aircraftProposal(user)
         runBlocking {
             assertTrue(proposalService.proposeAircraft(user, proposal).isSuccess)
-            val foundProposals = proposalService.getOpenAircraftProposals(userAllAuthorizations).getOrThrow()
+            val foundProposals = proposalService.getOpenAircraftProposals(userAllAuthorizations, limit = 10).getOrThrow()
             assertEquals(1, foundProposals.results.size)
             val foundProposal = foundProposals.results.first()
             assertEquals(foundProposal.authorId, proposal.authorId) // very rough round-trip check.
@@ -131,13 +133,11 @@ class ProposalServiceImplTest {
     @Test
     fun `a proposal cannot be found unless user is authorized for that type`(){
         runBlocking {
-            val userNoManufacturer = user(authorizations = allAuthorizationsExcept(UserAuthorization.DISPLAY_PROPOSED_MANUFACTURERS))
-            val userNoAircraft = user(authorizations = allAuthorizationsExcept(UserAuthorization.DISPLAY_PROPOSED_AIRCRAFT))
-            val userNoAircraftType = user(authorizations = allAuthorizationsExcept(UserAuthorization.DISPLAY_PROPOSED_AIRCRAFT_TYPES))
+            val userNoDisplayProposals = user(authorizations = allAuthorizationsExcept(UserAuthorization.DISPLAY_OPEN_PROPOSALS))
 
-            assertIs<UserNotAuthorizedForThisException>(proposalService.getOpenManufacturerProposals(userNoManufacturer).exceptionOrNull())
-            assertIs<UserNotAuthorizedForThisException>(proposalService.getOpenAircraftTypeProposals(userNoAircraftType).exceptionOrNull())
-            assertIs<UserNotAuthorizedForThisException>(proposalService.getOpenAircraftProposals(userNoAircraft).exceptionOrNull())
+            assertIs<UserNotAuthorizedForThisException>(proposalService.getOpenManufacturerProposals(userNoDisplayProposals, limit = 10).exceptionOrNull())
+            assertIs<UserNotAuthorizedForThisException>(proposalService.getOpenAircraftTypeProposals(userNoDisplayProposals, limit = 10).exceptionOrNull())
+            assertIs<UserNotAuthorizedForThisException>(proposalService.getOpenAircraftProposals(userNoDisplayProposals, limit = 10).exceptionOrNull())
         }
     }
 
@@ -150,7 +150,7 @@ class ProposalServiceImplTest {
         runBlocking {
             //insert a proposal, and get it with the inserted ID:
             proposalService.proposeManufacturer(userAllAuthorizations, proposal)
-            val foundProposalId = proposalService.getOpenManufacturerProposals(userAllAuthorizations).getOrThrow().results.first().id
+            val foundProposalId = proposalService.getOpenManufacturerProposals(userAllAuthorizations, limit = 10).getOrThrow().results.first().id
             val unauthorizedResult = proposalService.handleManufacturerProposalCheck(unauthorizedUser, foundProposalId, CheckResult.REJECTED, null)
             assertIs<UserNotAuthorizedForThisException>(unauthorizedResult.exceptionOrNull())
             val checkResult = proposalService.handleManufacturerProposalCheck(user, foundProposalId, CheckResult.REJECTED, null)
@@ -169,7 +169,7 @@ class ProposalServiceImplTest {
         runBlocking {
             //insert a proposal, and get it with the inserted ID:
             proposalService.proposeAircraftType(userAllAuthorizations, proposal)
-            val foundProposalId = proposalService.getOpenAircraftTypeProposals(userAllAuthorizations).getOrThrow().results.first().id
+            val foundProposalId = proposalService.getOpenAircraftTypeProposals(userAllAuthorizations, limit = 10).getOrThrow().results.first().id
             val unauthorizedResult = proposalService.handleAircraftTypeProposalCheck(unauthorizedUser, foundProposalId, CheckResult.REJECTED, null)
             assertIs<UserNotAuthorizedForThisException>(unauthorizedResult.exceptionOrNull())
             val checkResult = proposalService.handleAircraftTypeProposalCheck(user, foundProposalId, CheckResult.REJECTED, null)
@@ -188,13 +188,230 @@ class ProposalServiceImplTest {
         runBlocking {
             //insert a proposal, and get it with the inserted ID:
             proposalService.proposeAircraft(userAllAuthorizations, proposal)
-            val foundProposalId = proposalService.getOpenAircraftProposals(userAllAuthorizations).getOrThrow().results.first().id
+            val foundProposalId = proposalService.getOpenAircraftProposals(userAllAuthorizations, limit = 10).getOrThrow().results.first().id
             val unauthorizedResult = proposalService.handleAircraftProposalCheck(unauthorizedUser, foundProposalId, CheckResult.REJECTED, null)
             assertIs<UserNotAuthorizedForThisException>(unauthorizedResult.exceptionOrNull())
             val checkResult = proposalService.handleAircraftProposalCheck(user, foundProposalId, CheckResult.REJECTED, null)
             assertTrue(checkResult.isSuccess)
             val recheckResult = proposalService.handleAircraftProposalCheck(user, foundProposalId, CheckResult.REJECTED, null)
             assertIs<AlreadyCheckedException>(recheckResult.exceptionOrNull())
+        }
+    }
+
+    @Test
+    fun `check paging is correct for Manufacturers for both own limit and Config limit`(){
+        // insert 15 manufacturer proposals
+        var ownLimit = 3
+        val configLimit =  CONFIG_LIMIT_MATCHES_PER_PAGE
+        val entriesInDb = 15
+        require (ownLimit < configLimit) {"Cannot do this check if smallLimit is not less than configLimit"}
+        require(entriesInDb > configLimit) {"Cannot do this check if entriesInDb is not more than configLimit"}
+        runBlocking {
+
+            repeat(entriesInDb) {
+                val manufacturerProposal = manufacturerProposal(userAllAuthorizations)
+                proposalService.proposeManufacturer(userAllAuthorizations, manufacturerProposal)
+            }
+            // check own limit is respected for all pages, including offset
+            var currentOffset = 0L
+            while(currentOffset<= entriesInDb){
+                val page = proposalService.getOpenManufacturerProposals(userAllAuthorizations, ownLimit, currentOffset)
+                    .getOrThrow()
+                // check the page knows how many total results there are
+                assertEquals(entriesInDb.toLong(), page.totalCount)
+                //check page has the correct offset
+                assertEquals(currentOffset, page.offset)
+                // Check page knows what limit this has
+                assertEquals(ownLimit, page.limit)
+                val expectedResultsOnThisPage = minOf(ownLimit.toLong(), entriesInDb - currentOffset).toInt()
+                //Check the page has the correct number of results
+                assertEquals(expectedResultsOnThisPage, page.results.size)
+
+                currentOffset += ownLimit
+                println(page)
+            }
+            //check offset past last result gives empty page
+            currentOffset = entriesInDb + 1L
+            val page = proposalService.getOpenManufacturerProposals(userAllAuthorizations, ownLimit, currentOffset)
+                .getOrThrow()
+            // check the page knows how many total results there are
+            assertEquals(entriesInDb.toLong(), page.totalCount)
+            //check page has the correct offset
+            assertEquals(currentOffset, page.offset)
+            // Check page knows what limit this has
+            assertEquals(ownLimit, page.limit)
+            //Check the page has the correct number of results
+            assertEquals(0, page.results.size)
+
+            // check config limit is respected and communicated correctly
+            currentOffset = 0
+            ownLimit = configLimit + 1
+            while(currentOffset<= entriesInDb){
+                val page = proposalService.getOpenManufacturerProposals(userAllAuthorizations, ownLimit, currentOffset)
+                    .getOrThrow()
+                // check the page knows how many total results there are
+                assertEquals(entriesInDb.toLong(), page.totalCount)
+                //check page has the correct offset
+                assertEquals(currentOffset, page.offset)
+                // Check page knows what limit this has
+                assertEquals(configLimit, page.limit)
+                val expectedResultsOnThisPage = minOf(configLimit.toLong(), entriesInDb - currentOffset).toInt()
+                //Check the page has the correct number of results
+                assertEquals(expectedResultsOnThisPage, page.results.size)
+
+                currentOffset += configLimit
+                println(page)
+            }
+        }
+    }
+
+    /**
+     * Verifies pagination of aircraft type proposals with a requested limit
+     * and with the configured maximum limit, including offsets beyond the results.
+     */
+    @Test
+    fun `check paging is correct for AircraftTypes for both own limit and Config limit`() {
+        val ownLimit = 3
+        val configLimit = CONFIG_LIMIT_MATCHES_PER_PAGE
+        val entriesInDb = 15
+
+        require(ownLimit < configLimit) {
+            "Cannot do this check if ownLimit is not less than configLimit"
+        }
+        require(entriesInDb > configLimit) {
+            "Cannot do this check if entriesInDb is not more than configLimit"
+        }
+
+        runBlocking {
+            repeat(entriesInDb) {
+                val proposal = aircraftTypeProposal(userAllAuthorizations)
+                proposalService.proposeAircraftType(userAllAuthorizations, proposal)
+                    .getOrThrow()
+            }
+
+            // Check the requested limit, including an offset at the end.
+            var currentOffset = 0L
+            while (currentOffset <= entriesInDb) {
+                val page = proposalService.getOpenAircraftTypeProposals(
+                    userAllAuthorizations, ownLimit, currentOffset
+                ).getOrThrow()
+
+                assertEquals(entriesInDb.toLong(), page.totalCount)
+                assertEquals(currentOffset, page.offset)
+                assertEquals(ownLimit, page.limit)
+
+                val expectedResultsOnThisPage =
+                    minOf(ownLimit.toLong(), entriesInDb - currentOffset).toInt()
+                assertEquals(expectedResultsOnThisPage, page.results.size)
+
+                currentOffset += ownLimit
+            }
+
+            // Check an offset beyond the last result.
+            currentOffset = entriesInDb + 1L
+            val page = proposalService.getOpenAircraftTypeProposals(
+                userAllAuthorizations, ownLimit, currentOffset
+            ).getOrThrow()
+
+            assertEquals(entriesInDb.toLong(), page.totalCount)
+            assertEquals(currentOffset, page.offset)
+            assertEquals(ownLimit, page.limit)
+            assertEquals(0, page.results.size)
+
+            // Request more than the configured maximum.
+            val requestedLimit = configLimit + 1
+            currentOffset = 0L
+
+            while (currentOffset <= entriesInDb) {
+                val limitedPage = proposalService.getOpenAircraftTypeProposals(
+                    userAllAuthorizations, requestedLimit, currentOffset
+                ).getOrThrow()
+
+                assertEquals(entriesInDb.toLong(), limitedPage.totalCount)
+                assertEquals(currentOffset, limitedPage.offset)
+                assertEquals(configLimit, limitedPage.limit)
+
+                val expectedResultsOnThisPage =
+                    minOf(configLimit.toLong(), entriesInDb - currentOffset).toInt()
+                assertEquals(expectedResultsOnThisPage, limitedPage.results.size)
+
+                currentOffset += configLimit
+            }
+        }
+    }
+
+    /**
+     * Verifies pagination of aircraft proposals with a requested limit
+     * and with the configured maximum limit, including offsets beyond the results.
+     */
+    @Test
+    fun `check paging is correct for Aircraft for both own limit and Config limit`() {
+        val ownLimit = 3
+        val configLimit = CONFIG_LIMIT_MATCHES_PER_PAGE
+        val entriesInDb = 15
+
+        require(ownLimit < configLimit) {
+            "Cannot do this check if ownLimit is not less than configLimit"
+        }
+        require(entriesInDb > configLimit) {
+            "Cannot do this check if entriesInDb is not more than configLimit"
+        }
+
+        runBlocking {
+            repeat(entriesInDb) {
+                val proposal = aircraftProposal(userAllAuthorizations)
+                proposalService.proposeAircraft(userAllAuthorizations, proposal)
+                    .getOrThrow()
+            }
+
+            // Check the requested limit, including an offset at the end.
+            var currentOffset = 0L
+            while (currentOffset <= entriesInDb) {
+                val page = proposalService.getOpenAircraftProposals(
+                    userAllAuthorizations, ownLimit, currentOffset
+                ).getOrThrow()
+
+                assertEquals(entriesInDb.toLong(), page.totalCount)
+                assertEquals(currentOffset, page.offset)
+                assertEquals(ownLimit, page.limit)
+
+                val expectedResultsOnThisPage =
+                    minOf(ownLimit.toLong(), entriesInDb - currentOffset).toInt()
+                assertEquals(expectedResultsOnThisPage, page.results.size)
+
+                currentOffset += ownLimit
+            }
+
+            // Check an offset beyond the last result.
+            currentOffset = entriesInDb + 1L
+            val page = proposalService.getOpenAircraftProposals(
+                userAllAuthorizations, ownLimit, currentOffset
+            ).getOrThrow()
+
+            assertEquals(entriesInDb.toLong(), page.totalCount)
+            assertEquals(currentOffset, page.offset)
+            assertEquals(ownLimit, page.limit)
+            assertEquals(0, page.results.size)
+
+            // Request more than the configured maximum.
+            val requestedLimit = configLimit + 1
+            currentOffset = 0L
+
+            while (currentOffset <= entriesInDb) {
+                val limitedPage = proposalService.getOpenAircraftProposals(
+                    userAllAuthorizations, requestedLimit, currentOffset
+                ).getOrThrow()
+
+                assertEquals(entriesInDb.toLong(), limitedPage.totalCount)
+                assertEquals(currentOffset, limitedPage.offset)
+                assertEquals(configLimit, limitedPage.limit)
+
+                val expectedResultsOnThisPage =
+                    minOf(configLimit.toLong(), entriesInDb - currentOffset).toInt()
+                assertEquals(expectedResultsOnThisPage, limitedPage.results.size)
+
+                currentOffset += configLimit
+            }
         }
     }
 

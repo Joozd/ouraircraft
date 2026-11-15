@@ -32,7 +32,7 @@ class ManufacturerRepository(val database: Database, val config: Configuration.D
     fun getManufacturersByNamePrefix(user: User, prefix: String, offset: Long = 0, ): PagedResult<Manufacturer> =
         transaction(database.exposed) {
             user.requireAuthorization(UserAuthorization.DISPLAY_MANUFACTURERS)
-            getManufacturersByNamePrefixInTransaction(prefix, maxMatches = config.matchesPerPage, offset = offset)
+            getManufacturersByNamePrefixInTransaction(prefix, maxMatches = config.maxMatchesPerPage, offset = offset)
         }
 
 
@@ -52,10 +52,11 @@ class ManufacturerRepository(val database: Database, val config: Configuration.D
     /**
      * Get all currently outstanding Manufacturer Proposals
      */
-    fun getOpenManufacturerProposals(user: User, offset: Long): PagedResult<ManufacturerProposal> =
+    fun getOpenManufacturerProposals(user: User, limit: Int, offset: Long): PagedResult<ManufacturerProposal> =
         transaction(database.exposed) {
-            user.requireAuthorization(UserAuthorization.DISPLAY_PROPOSED_MANUFACTURERS)
-            getAllOpenManufacturerProposalsInTransaction(config.matchesPerPage, offset)
+            user.requireAuthorization(UserAuthorization.DISPLAY_OPEN_PROPOSALS)
+            val maxMatches = minOf(limit, config.maxMatchesPerPage)
+            getAllOpenManufacturerProposalsInTransaction(maxMatches, offset)
         }
 
     /**
