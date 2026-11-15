@@ -1,8 +1,8 @@
-package org.ouraircraft.db.repository.convertors
+package org.ouraircraft.model.dto.convertors
 
 import org.ouraircraft.model.auth.User
 import org.ouraircraft.model.dto.DtoUser
 
 fun User.toDto() = DtoUser(
-    id, screenName, createdAt
+    id, screenName, createdAt, authorizations
 )

@@ -6,7 +6,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.routing.openapi.*
 import org.ouraircraft.api.routes.callfunctions.getUserSession
-import org.ouraircraft.db.repository.convertors.toDto
+import org.ouraircraft.model.dto.convertors.toDto
 import org.ouraircraft.model.dto.MeResult
 import org.ouraircraft.model.services.users.SessionService
 import org.ouraircraft.model.services.users.UserManagementService

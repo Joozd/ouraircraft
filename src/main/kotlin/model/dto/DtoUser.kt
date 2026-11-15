@@ -1,6 +1,7 @@
 package org.ouraircraft.model.dto
 
 import kotlinx.serialization.Serializable
+import org.ouraircraft.auth.UserAuthorization
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
@@ -8,5 +9,6 @@ import kotlin.uuid.Uuid
 data class DtoUser(
     val id: Uuid,
     val screenName: String,
-    val createdAt: Instant
+    val createdAt: Instant,
+    val authorizations: Set<UserAuthorization>
 )

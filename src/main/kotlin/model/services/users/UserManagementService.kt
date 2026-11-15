@@ -2,6 +2,7 @@ package org.ouraircraft.model.services.users
 
 import org.ouraircraft.auth.RecoveryToken
 import org.ouraircraft.auth.Token
+import org.ouraircraft.auth.UserSessionToken
 import org.ouraircraft.model.auth.User
 import org.ouraircraft.model.dto.EmailVerificationData
 import org.ouraircraft.model.dto.NewUserRegistrationData
@@ -68,4 +69,10 @@ interface UserManagementService {
     ): Result<RecoveryToken>
 
     suspend fun getUserById(id: Uuid): Result<User>
+
+    suspend fun getCurrentUserInSession(
+        token: UserSessionToken,
+        extendIfValid: Boolean = true
+    ): Result<User>
+
 }

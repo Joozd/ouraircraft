@@ -8,7 +8,7 @@ import org.ouraircraft.model.services.users.PasskeyService
 
 internal fun createRelyingParty(config: Configuration, passkeyService: PasskeyService): RelyingParty{
     val rpIdentity = RelyingPartyIdentity.builder()
-        .id(config.hostName!!)  // Set this to a parent domain that covers all subdomains
+        .id(config.hostName)  // Set this to a parent domain that covers all subdomains
         // where users' credentials should be valid
         .name(config.programName)
         .build()

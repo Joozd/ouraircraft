@@ -5,6 +5,7 @@ import com.yubico.webauthn.data.RelyingPartyIdentity
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.ouraircraft.api.service.SessionServiceImpl
 import org.ouraircraft.crypt.TestingCryptoService
 import org.ouraircraft.db.TestingDatabase
 import org.ouraircraft.db.UserRole
@@ -14,8 +15,11 @@ import org.ouraircraft.db.service.UserManagementServiceImpl
 import org.ouraircraft.model.services.users.PasskeyService
 import org.ouraircraft.model.services.factories.LinkFactory
 import org.ouraircraft.db.repository.AuthRepository
+import org.ouraircraft.db.repository.SessionRepository
 import org.ouraircraft.db.repository.UserRepository
 import org.ouraircraft.model.internal.Configuration
+import org.ouraircraft.model.services.users.SessionService
+import org.ouraircraft.model.services.users.UserManagementService
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -32,6 +36,7 @@ class YubicoPasskeyCeremoniesImplTest {
 
     private lateinit var authrepository: AuthRepository
     private lateinit var userRepository: UserRepository
+    private lateinit var sessionRepository: SessionRepository
 
     private lateinit var passkeyService: PasskeyService
 
@@ -45,7 +50,8 @@ class YubicoPasskeyCeremoniesImplTest {
 
 
     private lateinit var authService: YubicoPasskeyCeremoniesImpl
-    private lateinit var userManSvc: UserManagementServiceImpl
+    private lateinit var sessionSvc: SessionService
+    private lateinit var userManSvc: UserManagementService
 
 
     fun insertUser(
@@ -73,13 +79,15 @@ class YubicoPasskeyCeremoniesImplTest {
         fixture = TestingDatabase()
         authrepository = AuthRepository(fixture.database)
         userRepository = UserRepository(fixture.database, crypto, config.userSessionConfig)
+        sessionRepository = SessionRepository(fixture.database, crypto, config.userSessionConfig)
         passkeyService = PasskeyServiceImpl(authrepository, userRepository)
         rp = RelyingParty.builder()
             .identity(rpIdentity)
             .credentialRepository(CredentialRepositoryImpl(passkeyService))
             .build()
 
-        userManSvc = UserManagementServiceImpl(userRepository, linkFactory)
+        sessionSvc = SessionServiceImpl(sessionRepository, config.userSessionConfig)
+        userManSvc = UserManagementServiceImpl(userRepository, linkFactory, sessionSvc)
 
         authService = YubicoPasskeyCeremoniesImpl(rp, userManSvc, passkeyService)
     }

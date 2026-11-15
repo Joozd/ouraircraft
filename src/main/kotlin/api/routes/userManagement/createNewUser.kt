@@ -20,6 +20,7 @@ import org.ouraircraft.model.services.users.UserManagementService
 fun Route.createNewUser(userManagementService: UserManagementService) {
     post("/api/users") {
         val registrationData = call.receive<NewUserRegistrationData>()
+        println("lalalala $registrationData")
 
         userManagementService.createNewPendingUserRegistration(registrationData)
             .onSuccess { activationLink ->

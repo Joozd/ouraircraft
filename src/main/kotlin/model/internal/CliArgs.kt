@@ -10,7 +10,7 @@ class CliArgs(args: Array<String>) {
     fun toConfiguration(): Configuration = Configuration(
         inMemoryDb = inMemoryDb,
         configFileLocation = configFileLocation,
-        hostName = hostName,
+        hostName = hostName ?: "localhost",
     )
 
 

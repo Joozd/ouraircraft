@@ -13,7 +13,7 @@ data class Configuration(
     // When required, this can be split into subparts
     val inMemoryDb: Boolean = true,
     val configFileLocation: String? = null,
-    val hostName: String? = "http://localhost",
+    val hostName: String = "localhost",
 
     val userSessionConfig: UserSessionConfig = UserSessionConfig(),
     val dataRetrievalConfig: DataRetrievalConfig = DataRetrievalConfig(),
@@ -29,7 +29,11 @@ data class Configuration(
         val recoveryTokenTTl: Duration = 30.minutes,
     )
 
+    /**
+     * @property maxMatchesPerPage The maximum page size, to protect database load.
+     *  Below this frontend can decide page size.
+     */
     data class DataRetrievalConfig(
-        val matchesPerPage: Int = 20
+        val maxMatchesPerPage: Int = 100
     )
 }

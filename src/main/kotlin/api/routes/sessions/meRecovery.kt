@@ -9,7 +9,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.openapi.describe
 import org.ouraircraft.api.cookies.readPasskeyAddingCookie
 import org.ouraircraft.model.dto.DtoUser
-import org.ouraircraft.db.repository.convertors.toDto
+import org.ouraircraft.model.dto.convertors.toDto
 import org.ouraircraft.model.services.users.SessionService
 import org.ouraircraft.model.services.users.UserManagementService
 

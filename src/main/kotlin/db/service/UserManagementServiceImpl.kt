@@ -4,6 +4,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.ouraircraft.auth.EmailVerificationToken
 import org.ouraircraft.auth.RecoveryToken
+import org.ouraircraft.auth.UserSessionToken
 import org.ouraircraft.auth.exceptions.TokenMismatchException
 import org.ouraircraft.db.exceptions.UserNotFoundByIDException
 import org.ouraircraft.model.services.utils.runCatchingAndMapToDomainException
@@ -15,12 +16,14 @@ import org.ouraircraft.model.dto.ScreenNameAvailable
 import org.ouraircraft.db.repository.UserRepository
 import org.ouraircraft.model.services.users.UserManagementService
 import org.ouraircraft.model.services.factories.LinkFactory
+import org.ouraircraft.model.services.users.SessionService
 import java.net.URI
 import kotlin.uuid.Uuid
 
 internal class UserManagementServiceImpl(
     private val userRepository: UserRepository,
-    private val linkFactory: LinkFactory
+    private val linkFactory: LinkFactory,
+    private val sessionService: SessionService,
 ): UserManagementService {
     /**
      * Checks whether a screen name is available for registration.
@@ -90,4 +93,16 @@ internal class UserManagementServiceImpl(
     override suspend fun getUserById(id: Uuid): Result<User> = runCatchingAndMapToDomainException {
         userRepository.getUserById(id)
     }
+
+    override suspend fun getCurrentUserInSession(
+        token: UserSessionToken,
+        extendIfValid: Boolean
+    ): Result<User> {
+        val session = sessionService.getUserSession(token, extendIfValid)
+            .onFailure { return Result.failure(it) }
+            .getOrThrow()
+        return getUserById(session.userId)
+    }
+
+
 }
