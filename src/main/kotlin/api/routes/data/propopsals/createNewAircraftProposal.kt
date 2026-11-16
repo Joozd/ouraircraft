@@ -21,7 +21,7 @@ fun Route.createNewAircraftProposal(
     proposalService: ProposalService
 ) {
     post("api/proposals/aircraft") {
-        val user = call.getUser(userManagementService)
+        val user = call.getUser(userManagementService, true)
             .getOrNull() ?: return@post
 
         val proposal = call.receive<NewAircraftProposalDto>().toAircraftProposal(user)

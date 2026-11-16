@@ -5,12 +5,7 @@ import org.ouraircraft.model.data.AircraftProposal
 import org.ouraircraft.model.data.AircraftTypeProposal
 import org.ouraircraft.model.data.ManufacturerProposal
 import org.ouraircraft.model.data.valueclasses.AircraftRegistration
-import org.ouraircraft.model.dto.data.DeleteAircraftProposalDto
-import org.ouraircraft.model.dto.data.DeleteAircraftTypeProposalDto
-import org.ouraircraft.model.dto.data.DeleteManufacturerProposalDto
-import org.ouraircraft.model.dto.data.NewAircraftProposalDto
-import org.ouraircraft.model.dto.data.NewAircraftTypeProposalDto
-import org.ouraircraft.model.dto.data.NewManufacturerProposalDto
+import org.ouraircraft.model.dto.data.*
 
 /**
  * Converts a manufacturer creation or update DTO into a proposal.
@@ -97,6 +92,53 @@ fun DeleteAircraftTypeProposalDto.toAircraftTypeProposal(
         engineType = "", // Ignored for deletion.
         wakeCategory = "", // Ignored for deletion.
     )
+
+/**
+ * Converts a ManufacturerProposal that needs to be checked to DTO.
+ */
+fun ManufacturerProposal.toUncheckedDto(): UncheckedManufacturerProposalDto = UncheckedManufacturerProposalDto(
+    id = id,
+    targetId = targetId,
+    authorId = authorId,
+    delete = delete,
+    proposalComment = proposalComment,
+    createdAt = createdAt,
+    name = name,
+    longName = longName,
+)
+
+/**
+ * Converts an AircraftProposal that needs to be checked to DTO.
+ */
+fun AircraftProposal.toUncheckedDto(): UncheckedAircraftProposalDto = UncheckedAircraftProposalDto(
+    id = id,
+    targetId = targetId,
+    authorId = authorId,
+    delete = delete,
+    proposalComment = proposalComment,
+    createdAt = createdAt,
+    aircraftTypeId = aircraftTypeId,
+    registration = registration.value,
+)
+
+/**
+ * Converts an AircraftTypeProposal that needs to be checked to DTO.
+ */
+fun AircraftTypeProposal.toUncheckedDto(): UncheckedAircraftTypeProposalDto = UncheckedAircraftTypeProposalDto(
+    id = id,
+    targetId = targetId,
+    authorId = authorId,
+    delete = delete,
+    proposalComment = proposalComment,
+    createdAt = createdAt,
+    manufacturerId = manufacturerId,
+    family = family,
+    variant = variant,
+    icaoDesignator = icaoDesignator,
+    engineCount = engineCount,
+    engineType = engineType,
+    wakeCategory = wakeCategory,
+)
 
 /**
  * Converts an aircraft creation or update DTO into a proposal.

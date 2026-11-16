@@ -23,7 +23,7 @@ fun Route.createUpdateAircraftTypeProposal(
     post("api/proposals/aircraftTypes/{targetId}") {
         val targetId = call.parameters["targetId"]?.toLongOrNull()
             ?: return@post call.respond(HttpStatusCode.BadRequest)
-        val user = call.getUser(userManagementService)
+        val user = call.getUser(userManagementService, true)
             .getOrNull() ?: return@post
 
         val proposal = call.receive<NewAircraftTypeProposalDto>().toAircraftTypeProposal(user, targetId)
