@@ -2,11 +2,12 @@ package org.ouraircraft
 
 import org.apache.logging.log4j.LogManager
 import org.ouraircraft.api.ApiServer
-import org.ouraircraft.db.createInMemoryDB
+import org.ouraircraft.auth.DevTestingRootUser
+import org.ouraircraft.db.createFileTestDB
 import org.ouraircraft.model.internal.CliArgs
 import org.ouraircraft.model.internal.Configuration
-import org.ouraircraft.model.services.users.CryptoService
 import org.ouraircraft.model.services.ServiceProvider
+import org.ouraircraft.model.services.users.CryptoService
 
 private val logger = LogManager.getLogger("org.ouraircraft.MainKT")
 
@@ -29,9 +30,10 @@ fun main(args: Array<String>) {
 
 private fun buildServiceProvider(configuration: Configuration): ServiceProvider{
     if(configuration.inMemoryDb){
+        val rootUser = DevTestingRootUser()
         val cryptoService = CryptoService.dummy()
-        val database = createInMemoryDB()
-        return ServiceProvider(cryptoService, database, configuration)
+        val database = createFileTestDB() // createInMemoryDB()
+        return ServiceProvider(cryptoService, database, configuration, rootUser)
     }
     else TODO("Create production ServiceProvider")
 }
