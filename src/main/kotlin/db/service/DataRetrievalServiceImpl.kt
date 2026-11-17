@@ -1,5 +1,7 @@
 package org.ouraircraft.db.service
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.ouraircraft.auth.UserAuthorization
 import org.ouraircraft.db.repository.AircraftRepository
 import org.ouraircraft.db.repository.AircraftTypeRepository
@@ -67,7 +69,44 @@ class DataRetrievalServiceImpl(
         user.requireAuthorization(UserAuthorization.DISPLAY_AIRCRAFT_TYPES)
 
         if(designatorPrefix.trim().length < 2) return@runCatchingAndMapToDomainException PagedResult.empty()
-        aircraftTypeRepository.getAircraftTypesByDesignatorPrefix(user, designatorPrefix, limit, offset)
+        withContext(Dispatchers.IO) {
+            aircraftTypeRepository.getAircraftTypesByDesignatorPrefix(user, designatorPrefix, limit, offset)
+        }
+    }
+
+    /**
+     * Gets aircraft type by combination of designator and registration.
+     * Null values count as all,
+     * if both values are null, or queries are too short, this will return an empty page.
+     */
+    override suspend fun getAircraftTypesByDesignatorOrRegistration(
+        designatorPrefix: String?,
+        familyPrefix: String?,
+        user: User,
+        limit: Int,
+        offset: Long
+    ): Result<PagedResult<AircraftType>> = runCatchingAndMapToDomainException {
+        withContext(Dispatchers.IO) {
+            when {
+                designatorPrefix == null && familyPrefix == null -> PagedResult.empty()
+                designatorPrefix == null -> getAircraftTypesByFamilyPrefix(familyPrefix!!, user, limit, offset).getOrThrow()
+                familyPrefix == null -> getAircraftTypesByDesignatorPrefix(designatorPrefix, user, limit, offset).getOrThrow()
+                else -> getAircraftTypesByDesignatorAndRegistration(designatorPrefix, familyPrefix, user, limit, offset)
+            }
+        }
+    }
+
+    private suspend fun getAircraftTypesByDesignatorAndRegistration(
+        designatorPrefix: String,
+        familyPrefix: String,
+        user: User,
+        limit: Int,
+        offset: Long
+    ): PagedResult<AircraftType> = withContext(Dispatchers.IO) {
+        user.requireAuthorization(UserAuthorization.DISPLAY_AIRCRAFT_TYPES)
+
+        if(designatorPrefix.trim().length < 2 && familyPrefix.trim().length < 2) return@withContext PagedResult.empty() // quick exit
+        aircraftTypeRepository.getAircraftTypesByDesignatorPrefixAndFamilyPrefix(user, designatorPrefix, familyPrefix, limit, offset)
     }
 
     /**
@@ -84,6 +123,8 @@ class DataRetrievalServiceImpl(
         user.requireAuthorization(UserAuthorization.DISPLAY_AIRCRAFT)
 
         if(registrationPrefix.trim().length < 2) return@runCatchingAndMapToDomainException PagedResult.empty()
-        aircraftRepository.getAircraftByRegistrationPrefix(user, registrationPrefix, limit, offset)
+        withContext(Dispatchers.IO) {
+            aircraftRepository.getAircraftByRegistrationPrefix(user, registrationPrefix, limit, offset)
+        }
     }
 }

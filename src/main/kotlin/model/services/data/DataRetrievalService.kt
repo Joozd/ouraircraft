@@ -36,4 +36,18 @@ interface DataRetrievalService {
      * Required authorization: [UserAuthorization.DISPLAY_AIRCRAFT]
      */
     suspend fun getAircraftByRegistrationPrefix(registrationPrefix: String, user: User, limit: Int, offset: Long = 0): Result<PagedResult<Aircraft>>
+
+
+    /**
+     * Gets aircraft type by combination of designator and registration.
+     * Null values count as all,
+     * if both values are null, or queries are too short, this will return an empty page.
+     */
+    suspend fun getAircraftTypesByDesignatorOrRegistration(
+        designatorPrefix: String?,
+        familyPrefix: String?,
+        user: User,
+        limit: Int,
+        offset: Long
+    ): Result<PagedResult<AircraftType>>
 }

@@ -3,6 +3,7 @@
 package org.ouraircraft.db.repository.ops
 
 import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.*
 import org.ouraircraft.db.exceptions.ProposalNotFoundByIdException
@@ -74,6 +75,41 @@ internal fun getAircraftTypesByDesignatorPrefixInTransaction(
         .selectAll()
         .where { AircraftTypeTable.icaoDesignator startsWith prefix }
         .orderBy(AircraftTypeTable.icaoDesignator to SortOrder.ASC, AircraftTypeTable.id to SortOrder.DESC)
+
+    val totalCount = query.count()
+
+    val results = query
+        .limit(maxMatches)
+        .offset(offset)
+        .map { it.toAircraftType() }
+
+    return PagedResult(results, maxMatches, offset, totalCount)
+}
+
+/**
+ * Finds a page of aircraft types whose ICAO designator starts with [designatorPrefix] and family starts with [familyPrefix].
+ *
+ * Case sensitivity depends on the database implementation.
+ *
+ * @param designatorPrefix The ICAO designator prefix to match.
+ * @param familyPrefix The family prefix to match.
+ * @param maxMatches The maximum number of results to return.
+ * @param offset The zero-based number of matching results to skip.
+ * @return A page of matching aircraft types, ordered by ICAO designator ascending
+ * and ID descending, including the total number of matches before pagination.
+ * @see startsWith for normalizing behavior
+ */
+context(tx: JdbcTransaction)
+internal fun getAircraftTypesByDesignatorAndFamilyInTransaction(
+    designatorPrefix: String,
+    familyPrefix: String,
+    maxMatches: Int,
+    offset: Long
+): PagedResult<AircraftType> {
+    val query = AircraftTypeTable
+        .selectAll()
+        .where { (AircraftTypeTable.icaoDesignator startsWith designatorPrefix) and (AircraftTypeTable.family startsWith familyPrefix) }
+        .orderBy(AircraftTypeTable.family to SortOrder.ASC, AircraftTypeTable.icaoDesignator to SortOrder.ASC, AircraftTypeTable.id to SortOrder.DESC)
 
     val totalCount = query.count()
 

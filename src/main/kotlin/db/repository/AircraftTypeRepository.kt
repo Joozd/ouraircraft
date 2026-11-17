@@ -17,7 +17,7 @@ import org.ouraircraft.model.internal.Configuration
 
 class AircraftTypeRepository(val database: Database, val config: Configuration.DataRetrievalConfig) {
     /**
-     * Finds aircraft types whose names start with [prefix].
+     * Finds aircraft types whose family names start with [prefix].
      *
      * The prefix is normalized before matching.
      *
@@ -31,7 +31,7 @@ class AircraftTypeRepository(val database: Database, val config: Configuration.D
         }
 
     /**
-     * Finds aircraft types whose names start with [prefix].
+     * Finds aircraft types whose designators start with [prefix].
      *
      * The prefix is normalized before matching.
      *
@@ -42,6 +42,20 @@ class AircraftTypeRepository(val database: Database, val config: Configuration.D
             user.requireAuthorization(UserAuthorization.DISPLAY_AIRCRAFT_TYPES)
             val maxMatches = minOf(limit, config.maxMatchesPerPage)
             getAircraftTypesByDesignatorPrefixInTransaction(prefix, maxMatches, offset)
+        }
+
+    /**
+     * Finds aircraft types  whose designators start with [designatorPrefix] and whose family names start with [familyPrefix].
+     *
+     * The prefix is normalized before matching.
+     *
+     * @return Matching aircraft types, or an empty list if none are found.
+     */
+    fun getAircraftTypesByDesignatorPrefixAndFamilyPrefix(user: User, designatorPrefix: String, familyPrefix: String, limit: Int, offset: Long = 0): PagedResult<AircraftType> =
+        transaction(database.exposed) {
+            user.requireAuthorization(UserAuthorization.DISPLAY_AIRCRAFT_TYPES)
+            val maxMatches = minOf(limit, config.maxMatchesPerPage)
+            getAircraftTypesByDesignatorAndFamilyInTransaction(designatorPrefix, familyPrefix, maxMatches, offset)
         }
 
 
