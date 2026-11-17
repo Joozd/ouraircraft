@@ -6,6 +6,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.routing.openapi.*
+import org.apache.logging.log4j.LogManager
 import org.ouraircraft.api.ApiErrorCodes
 import org.ouraircraft.db.exceptions.DuplicateEntryException
 import org.ouraircraft.db.exceptions.EmailAlreadyInUseException
@@ -14,13 +15,15 @@ import org.ouraircraft.model.dto.ApiError
 import org.ouraircraft.model.dto.NewUserRegistrationData
 import org.ouraircraft.model.services.users.UserManagementService
 
+private val logger = LogManager.getLogger("Route.createNewUser")
+
 /**
  * Creates a new pending user registration and returns a link with its activation token.
  */
 fun Route.createNewUser(userManagementService: UserManagementService) {
     post("/api/users") {
         val registrationData = call.receive<NewUserRegistrationData>()
-        println("lalalala $registrationData")
+        logger.debug(registrationData)
 
         userManagementService.createNewPendingUserRegistration(registrationData)
             .onSuccess { activationLink ->

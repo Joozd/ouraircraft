@@ -8,6 +8,7 @@ kotlinx-coroutines = "1.11.0"
 ktor = "3.6.0"
 yubico = "2.10.1"
 caffeine = "3.3.1"
+log4j = "2.26.1"
 
 [libraries]
 kotlinx-io-bytestring = { module = "org.jetbrains.kotlinx:kotlinx-io-bytestring", version.ref = "kotlinx-io" }
@@ -29,6 +30,11 @@ ktor-server-swagger = { module = "io.ktor:ktor-server-swagger", version.ref = "k
 
 yubico-server-core = { module ="com.yubico:webauthn-server-core", version.ref = "yubico" }
 caffeine-caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version.ref = "caffeine" }
+
+log4j-bom = { module = "org.apache.logging.log4j:log4j-bom", version.ref = "log4j" }
+log4j-api = { module = "org.apache.logging.log4j:log4j-api" }
+log4j-core = { module = "org.apache.logging.log4j:log4j-core" }
+log4j-slf4j2-impl = { module = "org.apache.logging.log4j:log4j-slf4j2-impl" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

@@ -31,6 +31,11 @@ dependencies {
     implementation(libs.yubico.server.core)
     implementation(libs.caffeine.caffeine)
 
+    implementation(platform(libs.log4j.bom))
+    implementation(libs.log4j.api)
+    runtimeOnly(libs.log4j.core)
+    runtimeOnly(libs.log4j.slf4j2.impl)
+
     testImplementation(kotlin("test"))
     testImplementation(libs.kotlinx.coroutines.test)
 }

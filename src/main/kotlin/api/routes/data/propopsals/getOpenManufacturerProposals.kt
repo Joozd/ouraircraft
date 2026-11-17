@@ -52,8 +52,9 @@ fun Route.getOpenManufacturerProposals(
     }.describe {
         summary = "Get open manufacturer proposals"
         description = """
-            Gets a page of manufacturer proposals awaiting review.
-            Requires a valid User session and the DISPLAY_PROPOSED_MANUFACTURERS authorization.
+            Gets a page of manufacturer proposals awaiting review.            
+            Requires a valid User session and the DISPLAY_OPEN_PROPOSALS or DISPLAY_OWN_OPEN_PROPOSALS authorization.
+            Depending on which proposal is present, only own proposals are shown, or all open proposals (highest authorization counts)
 
             Omitted pagination parameters use their default values.
         """.trimIndent()

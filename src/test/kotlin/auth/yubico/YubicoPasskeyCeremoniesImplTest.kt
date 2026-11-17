@@ -6,6 +6,7 @@ import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.ouraircraft.api.service.SessionServiceImpl
+import org.ouraircraft.auth.DevTestingRootUser
 import org.ouraircraft.crypt.TestingCryptoService
 import org.ouraircraft.db.TestingDatabase
 import org.ouraircraft.db.UserRole
@@ -23,6 +24,7 @@ import org.ouraircraft.model.services.users.UserManagementService
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
+import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.uuid.Uuid
 
@@ -31,6 +33,8 @@ class YubicoPasskeyCeremoniesImplTest {
     private val crypto = TestingCryptoService()
     private val linkFactory = LinkFactory()
     private val config = Configuration()
+
+    private val rootUser = DevTestingRootUser()
 
     private lateinit var fixture: TestingDatabase
 
@@ -87,7 +91,7 @@ class YubicoPasskeyCeremoniesImplTest {
             .build()
 
         sessionSvc = SessionServiceImpl(sessionRepository, config.userSessionConfig)
-        userManSvc = UserManagementServiceImpl(userRepository, linkFactory, sessionSvc)
+        userManSvc = UserManagementServiceImpl(userRepository, linkFactory, sessionSvc, rootUser)
 
         authService = YubicoPasskeyCeremoniesImpl(rp, userManSvc, passkeyService)
     }
@@ -104,9 +108,7 @@ class YubicoPasskeyCeremoniesImplTest {
             val testUserName = "Test McUser"
             insertUser(testUserId, testUserName)
             val testResult = authService.makePasskeyCreationOptionsJsonString(testUserId)
-            println("testResult: $testResult")
-
-            println("klaar weer")
+            assertTrue { testResult.isNotEmpty() } // het doet iets!
         }
     }
 }

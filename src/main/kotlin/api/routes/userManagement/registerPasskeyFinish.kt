@@ -1,13 +1,12 @@
 package org.ouraircraft.api.routes.userManagement
 
-import io.ktor.http.ContentType
-import io.ktor.http.HttpStatusCode
-import io.ktor.openapi.jsonSchema
-import io.ktor.server.request.receive
-import io.ktor.server.response.respond
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.openapi.describe
-import io.ktor.server.routing.post
+import io.ktor.http.*
+import io.ktor.openapi.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
+import io.ktor.server.routing.openapi.*
+import org.apache.logging.log4j.LogManager
 import org.ouraircraft.api.cookies.deletePasskeyAddingCookie
 import org.ouraircraft.api.cookies.placeUserSessionCookie
 import org.ouraircraft.api.routes.callfunctions.getPasskeyAddingSession
@@ -17,14 +16,16 @@ import org.ouraircraft.model.dto.PasskeyRegistrationResponse
 import org.ouraircraft.model.services.users.PasskeyCeremonies
 import org.ouraircraft.model.services.users.SessionService
 
+private val logger = LogManager.getLogger("Route.registerPasskeyFinish")
+
 /**
  * Verifies and stores a new passkey for a user with a valid passkey-adding session.
  */
 fun Route.registerPasskeyFinish(sessionService: SessionService, passkeyCeremonies: PasskeyCeremonies) {
     post("/api/passkeys/register/finish") {
-        println("registerPasskeyFinish started")
+        logger.debug("registerPasskeyFinish started")
         val passkeyAddingSessionData = call.getPasskeyAddingSession(sessionService)
-            .also { println(it)}
+            .also { logger.debug(it)}
 
         //no valid PasskeyAddingSession:
             ?: return@post call.respond(HttpStatusCode.Forbidden, "There is no valid passkey adding session")

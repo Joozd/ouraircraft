@@ -15,6 +15,7 @@ import com.yubico.webauthn.data.ResidentKeyRequirement
 import com.yubico.webauthn.exception.AssertionFailedException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.apache.logging.log4j.LogManager
 import org.ouraircraft.auth.exceptions.BadCredentialsException
 import org.ouraircraft.auth.exceptions.RegistrationFailedException
 import org.ouraircraft.auth.util.buildCache
@@ -37,6 +38,7 @@ class YubicoPasskeyCeremoniesImpl(
     private val userManagementService: UserManagementService,
     private val passkeyService: PasskeyService
 ): PasskeyCeremonies {
+    private val logger = LogManager.getLogger(this::class.simpleName)
     /**
      * Make a JSON String to pass to the frontend, so it can generate a passkey,
      * and send a response to the appropriate API Route.
@@ -72,7 +74,7 @@ class YubicoPasskeyCeremoniesImpl(
      */
     override suspend fun handlePasskeyRegistrationResponse(userId: Uuid, response: PasskeyRegistrationResponse): PasskeyData {
         val publicKeyCredential = PublicKeyCredential.parseRegistrationResponseJson(response.passkeyRegistrationResponseJson)
-            .also { println(it)}
+            .also { logger.debug(it)}
         val creationOptions = credentialCreationOptionsMap[userId] ?: throw UserNotFoundByIDException(userId)
 
         val regResult = try{
@@ -84,7 +86,7 @@ class YubicoPasskeyCeremoniesImpl(
              relyingParty.finishRegistration(finishRegistrationOptions)
         }
         catch(e: Throwable) {
-            println("handlePasskeyRegistrationResponse throws: $e")
+            logger.debug("handlePasskeyRegistrationResponse throws: $e")
             throw (RegistrationFailedException("Handling passkey registration response failed", e))
         }
 
@@ -119,7 +121,7 @@ class YubicoPasskeyCeremoniesImpl(
     override suspend fun handleAuthnRequestResponse(response: PasskeyResponse): PasskeyData {
         val publicKeyCredential = PublicKeyCredential.parseAssertionResponseJson(response.responseJson)
         val request = loginOptionsMap[response.id].also{
-            println("Request: $it")
+            logger.debug("Request: {}", it)
         }
 
 

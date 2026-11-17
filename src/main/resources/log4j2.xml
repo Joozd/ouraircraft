@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+    <Properties>
+        <Property name="logDir">${env:OURAIRCRAFT_LOG_DIR:-/var/log/ouraircraft}</Property>
+        <Property name="pattern">%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %-5level [%t] %logger - %msg%n%throwable</Property>
+    </Properties>
+
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="${pattern}"/>
+        </Console>
+
+        <RollingFile name="Verbose"
+                     fileName="${logDir}/verbose.log"
+                     filePattern="${logDir}/archive/verbose-%i.log.gz">
+            <PatternLayout pattern="${pattern}"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="20 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="10"/>
+        </RollingFile>
+
+        <RollingFile name="Normal"
+                     fileName="${logDir}/normal.log"
+                     filePattern="${logDir}/archive/normal-%i.log.gz">
+            <PatternLayout pattern="${pattern}"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="20 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="10"/>
+        </RollingFile>
+
+        <RollingFile name="Errors"
+                     fileName="${logDir}/errors.log"
+                     filePattern="${logDir}/archive/errors-%i.log.gz">
+            <PatternLayout pattern="${pattern}"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="20 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="10"/>
+        </RollingFile>
+
+        <RollingFile name="Warnings"
+                     fileName="${logDir}/warnings.log"
+                     filePattern="${logDir}/archive/warnings-%i.log.gz">
+            <LevelRangeFilter minLevel="WARN"
+                              maxLevel="WARN"
+                              onMatch="ACCEPT"
+                              onMismatch="DENY"/>
+            <PatternLayout pattern="${pattern}"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="20 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="10"/>
+        </RollingFile>
+    </Appenders>
+
+    <Loggers>
+        <Logger name="org.ouraircraft" level="TRACE"/>
+        <Root level="INFO">
+            <AppenderRef ref="Console" level="INFO"/>
+            <AppenderRef ref="Verbose"/>
+            <AppenderRef ref="Normal" level="INFO"/>
+            <AppenderRef ref="Errors" level="ERROR"/>
+            <AppenderRef ref="Warnings" level="WARN"/>
+        </Root>
+    </Loggers>
+</Configuration>

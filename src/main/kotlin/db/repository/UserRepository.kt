@@ -121,6 +121,7 @@ internal class UserRepository(
 
     /**
      * Retrieves a registered user by its unique identifier.
+     * This also sets authorizations according to DB.
      *
      * @param id Unique identifier of the user.
      * @return The matching user

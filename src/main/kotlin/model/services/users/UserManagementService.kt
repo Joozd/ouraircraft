@@ -68,8 +68,16 @@ interface UserManagementService {
         verificationData: EmailVerificationData
     ): Result<RecoveryToken>
 
+    /**
+     * Gets a [User] by its [Uuid].
+     * This function also checks if user is the root user, and sets authorizations.
+     */
     suspend fun getUserById(id: Uuid): Result<User>
 
+    /**
+     * Gets the current [User] by this session.
+     * This function also checks if user is the root user, and sets authorizations.
+     */
     suspend fun getCurrentUserInSession(
         token: UserSessionToken,
         extendIfValid: Boolean = true

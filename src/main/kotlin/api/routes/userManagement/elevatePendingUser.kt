@@ -14,6 +14,10 @@ import org.ouraircraft.model.dto.EmailVerificationData
 import org.ouraircraft.model.services.users.SessionService
 import org.ouraircraft.model.services.users.UserManagementService
 
+
+/**
+ * Elevate a pending user to a full user.
+ */
 fun Route.elevatePendingUser(
     userManagementService: UserManagementService,
     sessionService: SessionService

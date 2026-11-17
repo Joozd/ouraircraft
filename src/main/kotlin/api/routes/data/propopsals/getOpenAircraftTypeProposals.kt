@@ -54,7 +54,8 @@ fun Route.getOpenAircraftTypeProposals(
         summary = "Get open aircraft type proposals"
         description = """
             Gets a page of aircraft type proposals awaiting review.
-            Requires a valid User session and the DISPLAY_PROPOSED_AIRCRAFT_TYPES authorization.
+            Requires a valid User session and the DISPLAY_OPEN_PROPOSALS or DISPLAY_OWN_OPEN_PROPOSALS authorization.
+            Depending on which proposal is present, only own proposals are shown, or all open proposals (highest authorization counts)
 
             Omitted pagination parameters use their default values.
         """.trimIndent()

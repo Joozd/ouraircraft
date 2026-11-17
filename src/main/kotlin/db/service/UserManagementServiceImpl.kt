@@ -2,8 +2,12 @@ package org.ouraircraft.db.service
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.apache.logging.log4j.LogManager
+import org.ouraircraft.auth.DevTestingRootUser
 import org.ouraircraft.auth.EmailVerificationToken
 import org.ouraircraft.auth.RecoveryToken
+import org.ouraircraft.auth.RootUser
+import org.ouraircraft.auth.UserAuthorization
 import org.ouraircraft.auth.UserSessionToken
 import org.ouraircraft.auth.exceptions.TokenMismatchException
 import org.ouraircraft.db.exceptions.UserNotFoundByIDException
@@ -24,7 +28,10 @@ internal class UserManagementServiceImpl(
     private val userRepository: UserRepository,
     private val linkFactory: LinkFactory,
     private val sessionService: SessionService,
+    private val rootUser: RootUser
 ): UserManagementService {
+    private val logger = LogManager.getLogger(this::class.simpleName)
+
     /**
      * Checks whether a screen name is available for registration.
      *
@@ -76,11 +83,18 @@ internal class UserManagementServiceImpl(
         verificationData: EmailVerificationData
     ): Result<RecoveryToken> = runCatchingAndMapToDomainException {
         val token = EmailVerificationToken.fromBase64UrlSafe(verificationData.emailVerificationTokenBase64)
-        val promotedUser = userRepository.elevatePendingToUser(verificationData.id, token)
+        val promotedUserId = userRepository.elevatePendingToUser(verificationData.id, token)
         //this does not need to be in the same transaction; user can recover using "create new passkey"
 
+        //For dev only, if there is no root, the first created user becomes root.
+        if(rootUser is DevTestingRootUser && rootUser.rootId == null){
+            rootUser.set(promotedUserId)
+            logger.warn("NOTE WELL: USER WITH ${rootUser.rootId} IS NOW ROOT" )
+        }
+
+
         // insert a recovery token, and use that as the result of this function
-        userRepository.createRecoveryToken(promotedUser)
+        userRepository.createRecoveryToken(promotedUserId)
     }.onFailure {
         //catch Domain `UserNotFoundByIDException`, rethrow that as RuntimeException as it means ID was mangled during the process. (server error)
         if (it is UserNotFoundByIDException)
@@ -88,12 +102,22 @@ internal class UserManagementServiceImpl(
     }
 
     /**
-     * Gets a [User] from its [Uuid]
+     * Gets a [User] by its [Uuid].
+     * This function also checks if user is the root user, and sets authorizations.
      */
     override suspend fun getUserById(id: Uuid): Result<User> = runCatchingAndMapToDomainException {
         userRepository.getUserById(id)
+            .let{ user ->
+                if(rootUser.rootId == user.id) user.copy(authorizations = UserAuthorization.entries.toSet()) // check if user is root, if so: give all authorizations
+                else user
+            }
+
     }
 
+    /**
+     * Gets the current [User] by this session.
+     * This function also checks if user is the root user, and sets authorizations.
+     */
     override suspend fun getCurrentUserInSession(
         token: UserSessionToken,
         extendIfValid: Boolean

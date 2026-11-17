@@ -73,7 +73,6 @@ class ProposalServiceImplTest {
     fun `a Manufacturer proposal can not be added without correct authorization`(){
         val user = user(authorizations = allAuthorizationsExcept(UserAuthorization.PROPOSE_MANUFACTURERS))
         val proposal = manufacturerProposal(user)
-        println("user had authorizations: ${user.authorizations}")
         runBlocking{
             val result = (proposalService.proposeManufacturer(user, proposal))
             assertIs<UserNotAuthorizedForThisException>(result.exceptionOrNull())
@@ -228,7 +227,6 @@ class ProposalServiceImplTest {
                 assertEquals(expectedResultsOnThisPage, page.results.size)
 
                 currentOffset += ownLimit
-                println(page)
             }
             //check offset past last result gives empty page
             currentOffset = entriesInDb + 1L
@@ -260,7 +258,6 @@ class ProposalServiceImplTest {
                 assertEquals(expectedResultsOnThisPage, page.results.size)
 
                 currentOffset += configLimit
-                println(page)
             }
         }
     }

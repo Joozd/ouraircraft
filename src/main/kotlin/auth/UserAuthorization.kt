@@ -1,6 +1,7 @@
 package org.ouraircraft.auth
 
 enum class UserAuthorization {
+    DISPLAY_OWN_OPEN_PROPOSALS,
     DISPLAY_OPEN_PROPOSALS,
     DISPLAY_FINISHED_PROPOSALS,
 
