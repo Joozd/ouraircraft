@@ -21,6 +21,19 @@ import org.ouraircraft.model.data.CheckResult
 import org.ouraircraft.model.data.PagedResult
 
 /**
+ * Gets an Aircraft Type by its ID, or null if there is no Aircraft Type with id [id]
+ */
+context(tx: JdbcTransaction)
+internal fun getAircraftTypeByIdInTransaction(
+    id: Long
+): AircraftType? = AircraftTypeTable
+    .selectAll()
+    .where { AircraftTypeTable.id eq id }
+    .firstOrNull()
+    ?.toAircraftType()
+
+
+/**
  * Finds a page of aircraft types whose family names start with [prefix].
  *
  * Case sensitivity depends on the database implementation.

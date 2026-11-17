@@ -20,13 +20,23 @@ class DataRetrievalServiceImpl(
     private val aircraftRepository: AircraftRepository
 ): DataRetrievalService {
     /**
+     * Gets the Manufacturer with id [id], or null if that doesn't exist
+     * Required authorization: [UserAuthorization.DISPLAY_MANUFACTURERS]
+     */
+    override suspend fun getManufacturerById(user: User, id: Long): Result<Manufacturer?> = runCatchingAndMapToDomainException {
+        user.requireAuthorization(UserAuthorization.DISPLAY_MANUFACTURERS)
+
+        manufacturerRepository.getManufacturerById(user, id)
+    }
+
+    /**
      * Gets all Manufacturers whose name starts with [namePrefix]
      * If query is too short, this returns no results.
      * Required authorization: [UserAuthorization.DISPLAY_MANUFACTURERS]
      */
     override suspend fun getManufacturersByNamePrefix(
-        namePrefix: String,
         user: User,
+        namePrefix: String,
         limit: Int,
         offset: Long
     ): Result<PagedResult<Manufacturer>> = runCatchingAndMapToDomainException {
@@ -38,13 +48,22 @@ class DataRetrievalServiceImpl(
     }
 
     /**
+     * Gets the Aircraft Type with id [id], or null if that doesn't exist
+     * Required authorization: [UserAuthorization.DISPLAY_AIRCRAFT_TYPES]
+     */
+    override suspend fun getAircraftTypeById(user: User, id: Long): Result<AircraftType?> = runCatchingAndMapToDomainException{
+        user.requireAuthorization(UserAuthorization.DISPLAY_AIRCRAFT_TYPES)
+        aircraftTypeRepository.getAircraftTypeById(user, id)
+    }
+
+    /**
      * Gets all Aircraft Types whose family starts with [familyPrefix]
      * If query is too short, this returns no results.
      * Required authorization: [UserAuthorization.DISPLAY_AIRCRAFT_TYPES]
      */
     override suspend fun getAircraftTypesByFamilyPrefix(
-        familyPrefix: String,
         user: User,
+        familyPrefix: String,
         limit: Int,
         offset: Long
     ): Result<PagedResult<AircraftType>> = runCatchingAndMapToDomainException {
@@ -61,8 +80,8 @@ class DataRetrievalServiceImpl(
      * Required authorization: [UserAuthorization.DISPLAY_AIRCRAFT_TYPES]
      */
     override suspend fun getAircraftTypesByDesignatorPrefix(
-        designatorPrefix: String,
         user: User,
+        designatorPrefix: String,
         limit: Int,
         offset: Long
     ): Result<PagedResult<AircraftType>> = runCatchingAndMapToDomainException {
@@ -72,6 +91,15 @@ class DataRetrievalServiceImpl(
         withContext(Dispatchers.IO) {
             aircraftTypeRepository.getAircraftTypesByDesignatorPrefix(user, designatorPrefix, limit, offset)
         }
+    }
+
+    /**
+     * Gets the Aircraft with id [id], or null if that doesn't exist
+     * Required authorization: [UserAuthorization.DISPLAY_AIRCRAFT]
+     */
+    override suspend fun getAircraftById(user: User, id: Long): Result<Aircraft?> = runCatchingAndMapToDomainException {
+        user.requireAuthorization(UserAuthorization.DISPLAY_AIRCRAFT)
+        aircraftRepository.getAircraftTypeById(user, id)
     }
 
     /**
@@ -89,8 +117,8 @@ class DataRetrievalServiceImpl(
         withContext(Dispatchers.IO) {
             when {
                 designatorPrefix == null && familyPrefix == null -> PagedResult.empty()
-                designatorPrefix == null -> getAircraftTypesByFamilyPrefix(familyPrefix!!, user, limit, offset).getOrThrow()
-                familyPrefix == null -> getAircraftTypesByDesignatorPrefix(designatorPrefix, user, limit, offset).getOrThrow()
+                designatorPrefix == null -> getAircraftTypesByFamilyPrefix(user, familyPrefix!!, limit, offset).getOrThrow()
+                familyPrefix == null -> getAircraftTypesByDesignatorPrefix(user, designatorPrefix, limit, offset).getOrThrow()
                 else -> getAircraftTypesByDesignatorAndRegistration(designatorPrefix, familyPrefix, user, limit, offset)
             }
         }
@@ -115,8 +143,8 @@ class DataRetrievalServiceImpl(
      * Required authorization: [UserAuthorization.DISPLAY_AIRCRAFT]
      */
     override suspend fun getAircraftByRegistrationPrefix(
-        registrationPrefix: String,
         user: User,
+        registrationPrefix: String,
         limit: Int,
         offset: Long
     ): Result<PagedResult<Aircraft>> = runCatchingAndMapToDomainException {

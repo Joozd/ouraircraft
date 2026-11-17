@@ -8,11 +8,7 @@ import org.ouraircraft.db.exceptions.ProposalNotFoundByIdException
 import org.ouraircraft.db.exceptions.TargetItemForProposalNotFoundByIdException
 import org.ouraircraft.db.repository.ops.*
 import org.ouraircraft.model.auth.User
-import org.ouraircraft.model.data.Aircraft
-import org.ouraircraft.model.data.AircraftProposal
-import org.ouraircraft.model.data.CheckResult
-import org.ouraircraft.model.data.PagedResult
-import org.ouraircraft.model.data.Proposal
+import org.ouraircraft.model.data.*
 import org.ouraircraft.model.internal.Configuration
 
 /**
@@ -26,6 +22,15 @@ import org.ouraircraft.model.internal.Configuration
  * @property database Database used for repository operations.
  */
 class AircraftRepository(val database: Database, val config: Configuration.DataRetrievalConfig) {
+    /**
+     * Gets an Aircraft by its ID, or null if there is no Aircraft with id [id]
+     */
+    internal fun getAircraftTypeById(user: User, id: Long): Aircraft? =
+        transaction(database.exposed) {
+            user.requireAuthorization(UserAuthorization.DISPLAY_AIRCRAFT_TYPES)
+            getAircraftByIdInTransaction(id)
+        }
+
 
     /**
      * Finds aircraft whose registrations start with [prefix].

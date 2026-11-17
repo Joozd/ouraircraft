@@ -4,11 +4,7 @@ package org.ouraircraft.db.repository.ops
 
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
-import org.jetbrains.exposed.v1.jdbc.insert
-import org.jetbrains.exposed.v1.jdbc.insertAndGetId
-import org.jetbrains.exposed.v1.jdbc.selectAll
-import org.jetbrains.exposed.v1.jdbc.update
+import org.jetbrains.exposed.v1.jdbc.*
 import org.ouraircraft.db.exceptions.ProposalNotFoundByIdException
 import org.ouraircraft.db.exceptions.TargetItemForProposalNotFoundByIdException
 import org.ouraircraft.db.helpers.startsWith
@@ -24,6 +20,19 @@ import org.ouraircraft.model.data.Aircraft
 import org.ouraircraft.model.data.AircraftProposal
 import org.ouraircraft.model.data.CheckResult
 import org.ouraircraft.model.data.PagedResult
+
+/**
+ * Gets an Aircraft by its ID, or null if there is no Aircraft with id [id]
+ */
+context(tx: JdbcTransaction)
+internal fun getAircraftByIdInTransaction(
+    id: Long
+): Aircraft? = AircraftTable
+    .selectAll()
+    .where { AircraftTable.id eq id }
+    .firstOrNull()
+    ?.toAircraft()
+
 
 /**
  * Finds an aircraft by its database ID, including its type and manufacturer.

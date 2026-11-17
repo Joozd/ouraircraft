@@ -19,6 +19,21 @@ import org.ouraircraft.model.data.Manufacturer
 import org.ouraircraft.model.data.ManufacturerProposal
 import org.ouraircraft.model.data.PagedResult
 
+
+/**
+ * Gets a manufacturer by its ID, or null if there is no Manufacturer with id [id]
+ */
+context(tx: JdbcTransaction)
+internal fun getManufacturerByIdInTransaction(
+    id: Long
+): Manufacturer? = ManufacturerTable
+        .selectAll()
+        .where { ManufacturerTable.id eq id }
+        .firstOrNull()
+        ?.toManufacturer()
+
+
+
 /**
  * Finds a page of manufacturers whose names start with [prefix].
  *

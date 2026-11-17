@@ -1,6 +1,7 @@
 package org.ouraircraft.model.services
 
 import org.ouraircraft.api.service.SessionServiceImpl
+import org.ouraircraft.auth.RootUser
 import org.ouraircraft.auth.yubico.YubicoPasskeyCeremoniesImpl
 import org.ouraircraft.db.Database
 import org.ouraircraft.db.repository.*
@@ -21,7 +22,8 @@ import org.ouraircraft.model.services.utils.createRelyingParty
 class ServiceProvider(
     cryptoService: CryptoService,
     database: Database,
-    configuration: Configuration
+    configuration: Configuration,
+    rootUser: RootUser
 ){
     private val userRepository = UserRepository(database, cryptoService, configuration.userSessionConfig)
     private val sessionRepository = SessionRepository(database, cryptoService, configuration.userSessionConfig)
@@ -35,7 +37,7 @@ class ServiceProvider(
     private val linkFactory = LinkFactory(configuration.hostName)
 
     val sessionService: SessionService = SessionServiceImpl(sessionRepository, configuration.userSessionConfig)
-    val userManagementService: UserManagementService = UserManagementServiceImpl(userRepository, linkFactory, sessionService)
+    val userManagementService: UserManagementService = UserManagementServiceImpl(userRepository, linkFactory, sessionService, rootUser)
     val passkeyCeremonies: PasskeyCeremonies = YubicoPasskeyCeremoniesImpl(createRelyingParty(configuration, passkeyService), userManagementService, passkeyService)
 
     val dataRetrievalService: DataRetrievalService = DataRetrievalServiceImpl(manufacturerRepository, aircraftTypeRepository, aircraftRepository)

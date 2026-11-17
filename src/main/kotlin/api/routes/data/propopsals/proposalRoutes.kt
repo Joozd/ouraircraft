@@ -12,16 +12,17 @@ internal fun Route.proposalRoutes(
     createUpdateManufacturerProposal(userManagementService, proposalService)
     createDeleteManufacturerProposal(userManagementService, proposalService)
     getOpenManufacturerProposals(userManagementService, proposalService)
+    checkManufacturerProposal(userManagementService, proposalService)
 
     createNewAircraftTypeProposal(userManagementService, proposalService)
     createUpdateAircraftTypeProposal(userManagementService, proposalService)
     createDeleteAircraftTypeProposal(userManagementService, proposalService)
     getOpenAircraftTypeProposals(userManagementService, proposalService)
+    checkAircraftTypeProposal(userManagementService, proposalService)
 
     createNewAircraftProposal(userManagementService, proposalService)
     createUpdateAircraftProposal(userManagementService, proposalService)
     createDeleteAircraftProposal(userManagementService, proposalService)
     getOpenAircraftProposals(userManagementService, proposalService)
-
-    //TODO: accept/reject open proposals
+    checkAircraftProposal(userManagementService, proposalService)
 }

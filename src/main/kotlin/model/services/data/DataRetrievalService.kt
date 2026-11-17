@@ -14,28 +14,46 @@ import org.ouraircraft.model.data.PagedResult
  */
 interface DataRetrievalService {
     /**
+     * Gets the Manufacturer with id [id], or null if that doesn't exist
+     * Required authorization: [UserAuthorization.DISPLAY_MANUFACTURERS]
+     */
+    suspend fun getManufacturerById(user: User, id: Long): Result<Manufacturer?>
+
+    /**
      * Gets all Manufacturers whose name starts with [namePrefix]
      * Required authorization: [UserAuthorization.DISPLAY_MANUFACTURERS]
      */
-    suspend fun getManufacturersByNamePrefix(namePrefix: String, user: User, limit: Int, offset: Long = 0): Result<PagedResult<Manufacturer>>
+    suspend fun getManufacturersByNamePrefix(user: User, namePrefix: String, limit: Int, offset: Long = 0): Result<PagedResult<Manufacturer>>
+
+    /**
+     * Gets the Aircraft Type with id [id], or null if that doesn't exist
+     * Required authorization: [UserAuthorization.DISPLAY_AIRCRAFT_TYPES]
+     */
+    suspend fun getAircraftTypeById(user: User, id: Long): Result<AircraftType?>
 
     /**
      * Gets all Aircraft Types whose family starts with [familyPrefix]
      * Required authorization: [UserAuthorization.DISPLAY_AIRCRAFT_TYPES]
      */
-    suspend fun getAircraftTypesByFamilyPrefix(familyPrefix: String, user: User, limit: Int, offset: Long = 0): Result<PagedResult<AircraftType>>
+    suspend fun getAircraftTypesByFamilyPrefix(user: User, familyPrefix: String, limit: Int, offset: Long = 0): Result<PagedResult<AircraftType>>
 
     /**
      * Gets all Aircraft Types whose ICAO designator starts with [designatorPrefix]
      * Required authorization: [UserAuthorization.DISPLAY_AIRCRAFT_TYPES]
      */
-    suspend fun getAircraftTypesByDesignatorPrefix(designatorPrefix: String, user: User, limit: Int, offset: Long = 0): Result<PagedResult<AircraftType>>
+    suspend fun getAircraftTypesByDesignatorPrefix(user: User, designatorPrefix: String, limit: Int, offset: Long = 0): Result<PagedResult<AircraftType>>
+
+    /**
+     * Gets the Aircraft with id [id], or null if that doesn't exist
+     * Required authorization: [UserAuthorization.DISPLAY_AIRCRAFT]
+     */
+    suspend fun getAircraftById(user: User, id: Long): Result<Aircraft?>
 
     /**
      * Gets all Aircraft whose registration designator starts with [registrationPrefix]
      * Required authorization: [UserAuthorization.DISPLAY_AIRCRAFT]
      */
-    suspend fun getAircraftByRegistrationPrefix(registrationPrefix: String, user: User, limit: Int, offset: Long = 0): Result<PagedResult<Aircraft>>
+    suspend fun getAircraftByRegistrationPrefix(user: User, registrationPrefix: String, limit: Int, offset: Long = 0): Result<PagedResult<Aircraft>>
 
 
     /**

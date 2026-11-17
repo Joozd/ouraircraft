@@ -8,14 +8,20 @@ import org.ouraircraft.db.exceptions.ProposalNotFoundByIdException
 import org.ouraircraft.db.exceptions.TargetItemForProposalNotFoundByIdException
 import org.ouraircraft.db.repository.ops.*
 import org.ouraircraft.model.auth.User
-import org.ouraircraft.model.data.AircraftType
-import org.ouraircraft.model.data.AircraftTypeProposal
-import org.ouraircraft.model.data.CheckResult
-import org.ouraircraft.model.data.PagedResult
-import org.ouraircraft.model.data.Proposal
+import org.ouraircraft.model.data.*
 import org.ouraircraft.model.internal.Configuration
 
 class AircraftTypeRepository(val database: Database, val config: Configuration.DataRetrievalConfig) {
+    /**
+     * Gets an Aircraft Type by its ID, or null if there is no Aircraft Type with id [id]
+     */
+    internal fun getAircraftTypeById(user: User, id: Long): AircraftType? =
+        transaction(database.exposed) {
+            user.requireAuthorization(UserAuthorization.DISPLAY_AIRCRAFT_TYPES)
+            getAircraftTypeByIdInTransaction(id)
+        }
+
+
     /**
      * Finds aircraft types whose family names start with [prefix].
      *

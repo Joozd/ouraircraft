@@ -8,6 +8,7 @@ import org.ouraircraft.db.exceptions.ProposalNotFoundByIdException
 import org.ouraircraft.db.repository.ops.createManufacturerFromProposalInTransaction
 import org.ouraircraft.db.repository.ops.softDeleteManufacturerFromProposalInTransaction
 import org.ouraircraft.db.repository.ops.getAllOpenManufacturerProposalsInTransaction
+import org.ouraircraft.db.repository.ops.getManufacturerByIdInTransaction
 import org.ouraircraft.db.repository.ops.getManufacturerProposalByIdInTransaction
 import org.ouraircraft.db.repository.ops.getManufacturersByNamePrefixInTransaction
 import org.ouraircraft.db.repository.ops.insertManufacturerProposalInTransaction
@@ -22,6 +23,18 @@ import org.ouraircraft.model.data.Proposal
 import org.ouraircraft.model.internal.Configuration
 
 class ManufacturerRepository(val database: Database, val config: Configuration.DataRetrievalConfig) {
+    /**
+     * Finds the manufacturer with id [id].6
+     *
+     * @return Matching manufacturers, or an empty list if none are found.
+     */
+    fun getManufacturerById(user: User, id: Long): Manufacturer? =
+        transaction(database.exposed) {
+            user.requireAuthorization(UserAuthorization.DISPLAY_MANUFACTURERS)
+            getManufacturerByIdInTransaction(id)
+        }
+
+
     /**
      * Finds manufacturers whose names start with [prefix].
      *

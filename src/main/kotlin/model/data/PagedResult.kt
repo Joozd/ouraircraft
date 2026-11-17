@@ -14,4 +14,13 @@ data class PagedResult<T>(
     val limit: Int,
     val offset: Long,
     val totalCount: Long,
-)
+){
+    companion object{
+        fun <T> empty(): PagedResult<T> = PagedResult(
+            emptyList(),
+            0,
+            0,
+            0
+        )
+    }
+}

@@ -44,7 +44,7 @@ internal fun Route.searchAircraft(
         val query = call.queryParameters[QUERY_PARAMETER_NAME]?.trim()
             ?: return@get call.respond(HttpStatusCode.BadRequest)
 
-        dataRetrievalService.getAircraftByRegistrationPrefix(query, user, limit, offset)
+        dataRetrievalService.getAircraftByRegistrationPrefix(user, query, limit, offset)
             .onSuccess { pagedResult ->
                 val dto = pagedResult.toDto { it.toDto() }
                 call.respond(dto)
