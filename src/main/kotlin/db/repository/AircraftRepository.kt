@@ -34,10 +34,11 @@ class AircraftRepository(val database: Database, val config: Configuration.DataR
      *
      * @return Matching aircraft, or an empty list if none are found.
      */
-    fun getAircraftByRegistrationPrefix(user: User, prefix: String, offset: Long = 0): PagedResult<Aircraft> =
+    fun getAircraftByRegistrationPrefix(user: User, prefix: String, limit: Int, offset: Long = 0): PagedResult<Aircraft> =
         transaction(database.exposed) {
             user.requireAuthorization(UserAuthorization.DISPLAY_AIRCRAFT)
-            getAircraftByRegistrationPrefixInTransaction(prefix, maxMatches = config.maxMatchesPerPage, offset = offset)
+            val maxMatches = minOf(limit, config.maxMatchesPerPage)
+            getAircraftByRegistrationPrefixInTransaction(prefix, maxMatches, offset)
         }
 
     /**

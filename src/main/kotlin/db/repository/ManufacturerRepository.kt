@@ -29,10 +29,11 @@ class ManufacturerRepository(val database: Database, val config: Configuration.D
      *
      * @return Matching manufacturers, or an empty list if none are found.
      */
-    fun getManufacturersByNamePrefix(user: User, prefix: String, offset: Long = 0, ): PagedResult<Manufacturer> =
+    fun getManufacturersByNamePrefix(user: User, prefix: String, limit: Int, offset: Long = 0): PagedResult<Manufacturer> =
         transaction(database.exposed) {
             user.requireAuthorization(UserAuthorization.DISPLAY_MANUFACTURERS)
-            getManufacturersByNamePrefixInTransaction(prefix, maxMatches = config.maxMatchesPerPage, offset = offset)
+            val maxMatches = minOf(limit, config.maxMatchesPerPage)
+            getManufacturersByNamePrefixInTransaction(prefix, maxMatches, offset)
         }
 
 

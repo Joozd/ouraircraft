@@ -19,50 +19,71 @@ class DataRetrievalServiceImpl(
 ): DataRetrievalService {
     /**
      * Gets all Manufacturers whose name starts with [namePrefix]
+     * If query is too short, this returns no results.
      * Required authorization: [UserAuthorization.DISPLAY_MANUFACTURERS]
      */
     override suspend fun getManufacturersByNamePrefix(
         namePrefix: String,
-        user: User
+        user: User,
+        limit: Int,
+        offset: Long
     ): Result<PagedResult<Manufacturer>> = runCatchingAndMapToDomainException {
         user.requireAuthorization(UserAuthorization.DISPLAY_MANUFACTURERS)
 
-        manufacturerRepository.getManufacturersByNamePrefix(user, namePrefix)
+        if(namePrefix.trim().length < 2) return@runCatchingAndMapToDomainException PagedResult.empty()
+
+        manufacturerRepository.getManufacturersByNamePrefix(user, namePrefix, limit, offset)
     }
 
     /**
      * Gets all Aircraft Types whose family starts with [familyPrefix]
+     * If query is too short, this returns no results.
      * Required authorization: [UserAuthorization.DISPLAY_AIRCRAFT_TYPES]
      */
     override suspend fun getAircraftTypesByFamilyPrefix(
         familyPrefix: String,
-        user: User
+        user: User,
+        limit: Int,
+        offset: Long
     ): Result<PagedResult<AircraftType>> = runCatchingAndMapToDomainException {
         user.requireAuthorization(UserAuthorization.DISPLAY_AIRCRAFT_TYPES)
-        aircraftTypeRepository.getAircraftTypesByFamilyPrefix(user, familyPrefix)
+
+        if(familyPrefix.trim().length < 2) return@runCatchingAndMapToDomainException PagedResult.empty()
+
+        aircraftTypeRepository.getAircraftTypesByFamilyPrefix(user, familyPrefix, limit, offset)
     }
 
     /**
      * Gets all Aircraft Types whose ICAO designator starts with [designatorPrefix]
+     * If query is too short, this returns no results.
      * Required authorization: [UserAuthorization.DISPLAY_AIRCRAFT_TYPES]
      */
     override suspend fun getAircraftTypesByDesignatorPrefix(
         designatorPrefix: String,
-        user: User
+        user: User,
+        limit: Int,
+        offset: Long
     ): Result<PagedResult<AircraftType>> = runCatchingAndMapToDomainException {
         user.requireAuthorization(UserAuthorization.DISPLAY_AIRCRAFT_TYPES)
-        aircraftTypeRepository.getAircraftTypesByDesignatorPrefix(user, designatorPrefix)
+
+        if(designatorPrefix.trim().length < 2) return@runCatchingAndMapToDomainException PagedResult.empty()
+        aircraftTypeRepository.getAircraftTypesByDesignatorPrefix(user, designatorPrefix, limit, offset)
     }
 
     /**
      * Gets all Aircraft whose registration designator starts with [registrationPrefix]
+     * If query is too short, this returns no results.
      * Required authorization: [UserAuthorization.DISPLAY_AIRCRAFT]
      */
     override suspend fun getAircraftByRegistrationPrefix(
         registrationPrefix: String,
-        user: User
+        user: User,
+        limit: Int,
+        offset: Long
     ): Result<PagedResult<Aircraft>> = runCatchingAndMapToDomainException {
         user.requireAuthorization(UserAuthorization.DISPLAY_AIRCRAFT)
-        aircraftRepository.getAircraftByRegistrationPrefix(user, registrationPrefix,)
+
+        if(registrationPrefix.trim().length < 2) return@runCatchingAndMapToDomainException PagedResult.empty()
+        aircraftRepository.getAircraftByRegistrationPrefix(user, registrationPrefix, limit, offset)
     }
 }

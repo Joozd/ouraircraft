@@ -17,23 +17,23 @@ interface DataRetrievalService {
      * Gets all Manufacturers whose name starts with [namePrefix]
      * Required authorization: [UserAuthorization.DISPLAY_MANUFACTURERS]
      */
-    suspend fun getManufacturersByNamePrefix(namePrefix: String, user: User): Result<PagedResult<Manufacturer>>
+    suspend fun getManufacturersByNamePrefix(namePrefix: String, user: User, limit: Int, offset: Long = 0): Result<PagedResult<Manufacturer>>
 
     /**
      * Gets all Aircraft Types whose family starts with [familyPrefix]
      * Required authorization: [UserAuthorization.DISPLAY_AIRCRAFT_TYPES]
      */
-    suspend fun getAircraftTypesByFamilyPrefix(familyPrefix: String, user: User): Result<PagedResult<AircraftType>>
+    suspend fun getAircraftTypesByFamilyPrefix(familyPrefix: String, user: User, limit: Int, offset: Long = 0): Result<PagedResult<AircraftType>>
 
     /**
      * Gets all Aircraft Types whose ICAO designator starts with [designatorPrefix]
      * Required authorization: [UserAuthorization.DISPLAY_AIRCRAFT_TYPES]
      */
-    suspend fun getAircraftTypesByDesignatorPrefix(designatorPrefix: String, user: User): Result<PagedResult<AircraftType>>
+    suspend fun getAircraftTypesByDesignatorPrefix(designatorPrefix: String, user: User, limit: Int, offset: Long = 0): Result<PagedResult<AircraftType>>
 
     /**
      * Gets all Aircraft whose registration designator starts with [registrationPrefix]
      * Required authorization: [UserAuthorization.DISPLAY_AIRCRAFT]
      */
-    suspend fun getAircraftByRegistrationPrefix(registrationPrefix: String, user: User): Result<PagedResult<Aircraft>>
+    suspend fun getAircraftByRegistrationPrefix(registrationPrefix: String, user: User, limit: Int, offset: Long = 0): Result<PagedResult<Aircraft>>
 }

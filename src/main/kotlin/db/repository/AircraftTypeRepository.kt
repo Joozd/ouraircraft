@@ -23,10 +23,11 @@ class AircraftTypeRepository(val database: Database, val config: Configuration.D
      *
      * @return Matching aircraft types, or an empty list if none are found.
      */
-    fun getAircraftTypesByFamilyPrefix(user: User, prefix: String, offset: Long = 0): PagedResult<AircraftType> =
+    fun getAircraftTypesByFamilyPrefix(user: User, prefix: String, limit: Int, offset: Long = 0): PagedResult<AircraftType> =
         transaction(database.exposed) {
             user.requireAuthorization(UserAuthorization.DISPLAY_AIRCRAFT_TYPES)
-            getAircraftTypesByFamilyPrefixInTransaction(prefix, maxMatches = config.maxMatchesPerPage, offset = offset)
+            val maxMatches = minOf(limit, config.maxMatchesPerPage)
+            getAircraftTypesByFamilyPrefixInTransaction(prefix, maxMatches, offset)
         }
 
     /**
@@ -36,10 +37,11 @@ class AircraftTypeRepository(val database: Database, val config: Configuration.D
      *
      * @return Matching aircraft types, or an empty list if none are found.
      */
-    fun getAircraftTypesByDesignatorPrefix(user: User, prefix: String, offset: Long = 0): PagedResult<AircraftType> =
+    fun getAircraftTypesByDesignatorPrefix(user: User, prefix: String, limit: Int, offset: Long = 0): PagedResult<AircraftType> =
         transaction(database.exposed) {
             user.requireAuthorization(UserAuthorization.DISPLAY_AIRCRAFT_TYPES)
-            getAircraftTypesByDesignatorPrefixInTransaction(prefix, config.maxMatchesPerPage, offset = offset)
+            val maxMatches = minOf(limit, config.maxMatchesPerPage)
+            getAircraftTypesByDesignatorPrefixInTransaction(prefix, maxMatches, offset)
         }
 
 
